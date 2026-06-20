@@ -1,4 +1,4 @@
-import { apiClient } from './client';
+import { apiClient } from '@/core/api/client';
 import type { Plan } from '@/model/plan.model';
 
 interface ProposalResponse {
