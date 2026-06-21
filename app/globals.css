@@ -1,26 +1,73 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* ── surfaces (cool near-black, layered) ── */
+  --background: #0c0c0e; /* app base — not pure black, slight cool */
+  --surface: #141417; /* sidebar, panels — one step up from base */
+  --surface-raised: #1b1b1f; /* hover states, inputs, elevated cards */
+  --border: #26262b; /* hairline borders between regions */
+  --border-subtle: #1e1e22; /* even quieter dividers */
+
+  /* ── text ── */
+  --foreground: #e8e8ea; /* primary text — off-white, not harsh */
+  --foreground-muted: #9a9aa2; /* secondary text, labels */
+  --foreground-faint: #6a6a72; /* tertiary — timestamps, hints */
+
+  /* ── neutral accent (interactive) ── */
+  --accent: #d4d4d8; /* neutral bright — active items, focus */
+  --accent-muted: #3a3a40; /* subtle highlight, selected-bg */
+
+  /* ── state: positive (approve / merged / additions) ── */
+  --positive: #4ade80; /* the green — text/icons */
+  --positive-bg: #11241a; /* green background tint (diff add line bg) */
+  --positive-border: #1f5236; /* green border/accent */
+
+  /* ── state: negative (discard / additions removed) ── */
+  --negative: #f87171; /* the red — text/icons */
+  --negative-bg: #2a1416; /* red background tint (diff remove line bg) */
+  --negative-border: #5c2327; /* red border/accent */
+
+  /* ── state: in-progress (running) ── */
+  --running: #e0b341; /* amber — executing, pending */
+  --running-bg: #261f0f;
+
+  /* ── code (the dark code area, even darker than surfaces) ── */
+  --code-bg: #08080a; /* code blocks — deepest, locked-in feel */
+  --code-border: #1e1e22;
+
+  /* ── diff line markers (used by the diff viewer) ── */
+  --diff-add-text: #86efac;
+  --diff-remove-text: #fca5a5;
+  --diff-hunk: #7a9cc6; /* the @@ lines — muted blue */
+  --diff-context: #6a6a72; /* unchanged lines — faint */
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-border: var(--border);
   --color-foreground: var(--foreground);
+  --color-foreground-muted: var(--foreground-muted);
+  --color-foreground-faint: var(--foreground-faint);
+  --color-accent: var(--accent);
+  --color-positive: var(--positive);
+  --color-negative: var(--negative);
+  --color-running: var(--running);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family:
+    var(--font-geist-sans),
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
