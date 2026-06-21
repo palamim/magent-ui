@@ -11,3 +11,5 @@ export interface ApproveResult {
 export interface DiscardResult {
   discarded: boolean;
 }
+
+export type InspectTool = 'vscode' | 'finder' | 'terminal' | 'ghostty';

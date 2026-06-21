@@ -1,9 +1,10 @@
 'use client';
 
+import { InspectTool } from '@/model/execution.model';
 import { useMagent } from '@/providers/magent.provider';
 
 export const TopBar = () => {
-  const { execution, acting, approve, discard } = useMagent();
+  const { execution, acting, approve, discard, inspect } = useMagent();
 
   return (
     <header
@@ -12,6 +13,30 @@ export const TopBar = () => {
     >
       {execution ? (
         <>
+          <select
+            onChange={(e) => {
+              if (e.target.value) {
+                inspect(e.target.value as InspectTool);
+                e.target.value = '';
+              }
+            }}
+            defaultValue=""
+            className="px-2 py-1.5 rounded"
+            style={{
+              background: 'var(--surface-raised)',
+              color: 'var(--foreground-muted)',
+              border: '1px solid var(--border)',
+              fontSize: 13,
+            }}
+          >
+            <option value="" disabled>
+              Inspect…
+            </option>
+            <option value="vscode">VS Code</option>
+            <option value="finder">Finder</option>
+            <option value="terminal">Terminal</option>
+            <option value="ghostty">Ghostty</option>
+          </select>
           <button
             onClick={discard}
             disabled={acting}

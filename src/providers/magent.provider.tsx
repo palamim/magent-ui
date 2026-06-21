@@ -2,9 +2,9 @@
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { fetchProposal } from '@/core/api/proposal.api';
-import { executePlan, approveExecution, discardExecution } from '@/core/api/execution.api';
+import { executePlan, approveExecution, discardExecution, inspectBranch } from '@/core/api/execution.api';
 import type { Plan } from '@/model/plan.model';
-import type { ExecutionResult } from '@/model/execution.model';
+import type { ExecutionResult, InspectTool } from '@/model/execution.model';
 import { FileDiff, parseDiff } from '@/lib/parse-diff';
 import { loadStoredDir, storeDir } from '@/lib/project-storage';
 
@@ -28,6 +28,7 @@ interface MagentActions {
   selectView: (view: SelectedView) => void;
   propose: () => Promise<void>;
   execute: () => Promise<void>;
+  inspect: (tool: InspectTool) => Promise<void>;
   approve: () => Promise<void>;
   discard: () => Promise<void>;
 }
@@ -95,6 +96,15 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const inspect = async (tool: InspectTool) => {
+    if (!execution) return;
+    try {
+      await inspectBranch(dir, execution.branch, tool);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Inspect failed');
+    }
+  };
+
   const approve = async () => {
     if (!plan || !execution) return;
     setActing(true);
@@ -146,6 +156,7 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
     selectView,
     propose,
     execute,
+    inspect,
     approve,
     discard,
   };
