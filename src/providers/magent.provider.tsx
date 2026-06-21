@@ -5,6 +5,7 @@ import { fetchProposal } from '@/core/api/proposal.api';
 import { executePlan, approveExecution, discardExecution } from '@/core/api/execution.api';
 import type { Plan } from '@/model/plan.model';
 import type { ExecutionResult } from '@/model/execution.model';
+import { FileDiff, parseDiff } from '@/lib/parse-diff';
 
 // what the main panel is currently showing
 type SelectedView = { kind: 'none' } | { kind: 'plan' } | { kind: 'file'; path: string };
@@ -14,6 +15,7 @@ interface MagentState {
   plan: Plan | null;
   execution: ExecutionResult | null;
   selectedView: SelectedView;
+  files: FileDiff[];
   proposing: boolean;
   executing: boolean;
   acting: boolean;
@@ -38,6 +40,7 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
   const [plan, setPlan] = useState<Plan | null>(null);
   const [execution, setExecution] = useState<ExecutionResult | null>(null);
   const [selectedView, setSelectedView] = useState<SelectedView>({ kind: 'none' });
+  const [files, setFiles] = useState<FileDiff[]>([]);
 
   const [proposing, setProposing] = useState(false);
   const [executing, setExecuting] = useState(false);
@@ -67,8 +70,12 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
     try {
       const result = await executePlan(dir, plan);
       setExecution(result);
-      // auto-select first changed file, or fall back to plan
-      // (file list parsing comes when we wire the sidebar nav)
+      const parsed = parseDiff(result.diff);
+      setFiles(parsed);
+      // auto-select the first file so the main panel shows something
+      if (parsed.length > 0) {
+        setSelectedView({ kind: 'file', path: parsed[0].path });
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Execution failed');
     } finally {
@@ -108,6 +115,7 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
     setPlan(null);
     setExecution(null);
     setSelectedView({ kind: 'none' });
+    setFiles([]);
   };
 
   const selectView = (view: SelectedView) => setSelectedView(view);
@@ -117,6 +125,7 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
     plan,
     execution,
     selectedView,
+    files,
     proposing,
     executing,
     acting,
