@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { AppShell } from '@/modules/shell/app-shell';
+import { MagentProvider } from '@/providers/magent.provider';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -26,7 +27,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
-        <AppShell>{children}</AppShell>
+        <MagentProvider>
+          <AppShell>{children}</AppShell>
+        </MagentProvider>
       </body>
     </html>
   );

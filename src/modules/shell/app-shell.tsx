@@ -1,3 +1,5 @@
+'use client';
+
 import { Sidebar } from '@/modules/shell/sidebar';
 import { TopBar } from '@/modules/shell/top-bar';
 

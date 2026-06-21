@@ -1,4 +1,9 @@
-export function Sidebar() {
+'use client';
+
+import { useMagent } from '@/providers/magent.provider';
+
+export const Sidebar = () => {
+  const { dir, setDir } = useMagent();
   return (
     <aside
       className="flex flex-col w-[260px] shrink-0 border-r"
@@ -6,7 +11,13 @@ export function Sidebar() {
     >
       {/* project selector (top) */}
       <div className="flex items-center h-12 px-4 border-b shrink-0" style={{ borderColor: 'var(--border)' }}>
-        <span style={{ color: 'var(--foreground-muted)', fontSize: 13 }}>No project selected</span>
+        <input
+          value={dir}
+          onChange={(e) => setDir(e.target.value)}
+          placeholder="Project path…"
+          className="w-full bg-transparent outline-none"
+          style={{ color: 'var(--foreground)', fontSize: 13 }}
+        />
       </div>
 
       {/* current thread (navigation) */}
@@ -18,4 +29,4 @@ export function Sidebar() {
       </nav>
     </aside>
   );
-}
+};
