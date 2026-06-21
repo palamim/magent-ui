@@ -1,6 +1,6 @@
 'use client';
 
-export function TopBar() {
+export const TopBar = () => {
   return (
     <header
       className="flex items-center justify-end gap-2 h-12 px-4 border-b shrink-0"
@@ -10,4 +10,4 @@ export function TopBar() {
       <span style={{ color: 'var(--foreground-faint)', fontSize: 13 }}>—</span>
     </header>
   );
-}
+};

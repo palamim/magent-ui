@@ -3,7 +3,7 @@
 import { Sidebar } from '@/modules/shell/sidebar';
 import { TopBar } from '@/modules/shell/top-bar';
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+export const AppShell = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="flex h-screen" style={{ background: 'var(--background)', color: 'var(--foreground)' }}>
       <Sidebar />
@@ -13,4 +13,4 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </div>
     </div>
   );
-}
+};
