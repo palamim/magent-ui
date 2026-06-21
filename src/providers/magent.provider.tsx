@@ -1,11 +1,12 @@
 'use client';
 
-import { createContext, useContext, useState, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { fetchProposal } from '@/core/api/proposal.api';
 import { executePlan, approveExecution, discardExecution } from '@/core/api/execution.api';
 import type { Plan } from '@/model/plan.model';
 import type { ExecutionResult } from '@/model/execution.model';
 import { FileDiff, parseDiff } from '@/lib/parse-diff';
+import { loadStoredDir, storeDir } from '@/lib/project-storage';
 
 // what the main panel is currently showing
 type SelectedView = { kind: 'none' } | { kind: 'plan' } | { kind: 'file'; path: string };
@@ -23,7 +24,7 @@ interface MagentState {
 }
 
 interface MagentActions {
-  setDir: (dir: string) => void;
+  selectProject: (dir: string) => void;
   selectView: (view: SelectedView) => void;
   propose: () => Promise<void>;
   execute: () => Promise<void>;
@@ -36,7 +37,7 @@ type MagentContextValue = MagentState & MagentActions;
 const MagentContext = createContext<MagentContextValue | null>(null);
 
 export const MagentProvider = ({ children }: { children: ReactNode }) => {
-  const [dir, setDir] = useState('');
+  const [dir, setDirState] = useState('');
   const [plan, setPlan] = useState<Plan | null>(null);
   const [execution, setExecution] = useState<ExecutionResult | null>(null);
   const [selectedView, setSelectedView] = useState<SelectedView>({ kind: 'none' });
@@ -46,6 +47,17 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
   const [executing, setExecuting] = useState(false);
   const [acting, setActing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const stored = loadStoredDir();
+    // eslint-disable-next-line -- reading persisted dir from localStorage after mount is a valid external-sync
+    if (stored) setDirState(stored);
+  }, []);
+
+  const selectProject = (path: string) => {
+    setDirState(path);
+    storeDir(path);
+  };
 
   const propose = async () => {
     setProposing(true);
@@ -130,7 +142,7 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
     executing,
     acting,
     error,
-    setDir,
+    selectProject,
     selectView,
     propose,
     execute,

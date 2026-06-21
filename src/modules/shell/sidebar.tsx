@@ -3,7 +3,7 @@
 import { useMagent } from '@/providers/magent.provider';
 
 export const Sidebar = () => {
-  const { dir, setDir, plan, files, selectedView, selectView } = useMagent();
+  const { dir, selectProject, plan, files, selectedView, selectView } = useMagent();
 
   const modified = files.filter((f) => f.status === 'modified');
   const created = files.filter((f) => f.status === 'created');
@@ -17,7 +17,7 @@ export const Sidebar = () => {
       <div className="flex items-center h-12 px-4 border-b shrink-0" style={{ borderColor: 'var(--border)' }}>
         <input
           value={dir}
-          onChange={(e) => setDir(e.target.value)}
+          onChange={(e) => selectProject(e.target.value)}
           placeholder="Project path…"
           className="w-full bg-transparent outline-none"
           style={{ color: 'var(--foreground)', fontSize: 13 }}
