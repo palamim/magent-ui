@@ -11,12 +11,14 @@ import { EmptyDirection } from '@/modules/main-pannel/empty-direction.view';
 export const MainPanel = () => {
   const { selectedView } = useMagent();
 
+  // Planner/Executor Mode
   if (selectedView.kind === 'empty-plan') return <EmptyPlan />;
   if (selectedView.kind === 'plan') return <PlanView />;
   if (selectedView.kind === 'file') return <FileDiffView path={selectedView.path} />;
+
+  // Director Mode
   if (selectedView.kind === 'empty-direction') return <EmptyDirection />;
   if (selectedView.kind === 'direction') return <DirectionView />;
-  if (selectedView.kind === 'direction-doc') return <DocDiffView which="direction" />;
-  if (selectedView.kind === 'conventions-doc') return <DocDiffView which="conventions" />;
+  if (selectedView.kind === 'doc') return <DocDiffView name={selectedView.name} />;
   return null;
 };

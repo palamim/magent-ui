@@ -25,7 +25,7 @@ export const Sidebar = () => {
         />
       </div>
 
-      {/* Mode Selector (Elevated Pill Switch) */}
+      {/* mode selector */}
       <div className="px-3 pt-3 pb-1 shrink-0">
         <div
           className="flex p-1 rounded-lg border transition-all"
@@ -74,16 +74,14 @@ export const Sidebar = () => {
                 active={selectedView.kind === 'direction'}
                 onClick={() => selectView({ kind: 'direction' })}
               />
-              <SidebarItem
-                label="direction.md"
-                active={selectedView.kind === 'direction-doc'}
-                onClick={() => selectView({ kind: 'direction-doc' })}
-              />
-              <SidebarItem
-                label="conventions.md"
-                active={selectedView.kind === 'conventions-doc'}
-                onClick={() => selectView({ kind: 'conventions-doc' })}
-              />
+              {direction.docs.map((doc) => (
+                <SidebarItem
+                  key={doc.name}
+                  label={doc.name}
+                  active={selectedView.kind === 'doc' && selectedView.name === doc.name}
+                  onClick={() => selectView({ kind: 'doc', name: doc.name })}
+                />
+              ))}
             </>
           )}
         </nav>

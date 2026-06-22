@@ -1,9 +1,13 @@
+export interface DocDiff {
+  name: string;
+  diff: string;
+}
+
 export interface DirectionProposal {
   rationale: string;
   direction: string;
   conventions: string;
-  directionDiff: string;
-  conventionsDiff: string;
+  docs: DocDiff[];
 }
 
 export interface ApproveDirectionResult {

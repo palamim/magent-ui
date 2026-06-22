@@ -3,10 +3,10 @@
 import { DiffView } from '@/components/diff-view';
 import { useMagent } from '@/providers/magent.provider';
 
-export const DocDiffView = ({ which }: { which: 'direction' | 'conventions' }) => {
+export const DocDiffView = ({ name }: { name: string }) => {
   const { direction } = useMagent();
   if (!direction) return null;
-  const diff = which === 'direction' ? direction.directionDiff : direction.conventionsDiff;
-  const label = which === 'direction' ? 'direction.md' : 'conventions.md';
-  return <DiffView label={label} diff={diff} />;
+  const doc = direction.docs.find((d) => d.name === name);
+  if (!doc) return null;
+  return <DiffView label={doc.name} diff={doc.diff} />;
 };

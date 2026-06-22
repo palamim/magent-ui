@@ -19,8 +19,7 @@ type SelectedView =
   | { kind: 'file'; path: string }
   | { kind: 'empty-direction' }
   | { kind: 'direction' }
-  | { kind: 'direction-doc' }
-  | { kind: 'conventions-doc' };
+  | { kind: 'doc'; name: string };
 
 interface MagentState {
   dir: string;
