@@ -3,7 +3,8 @@
 import { useMagent } from '@/providers/magent.provider';
 
 export const Sidebar = () => {
-  const { dir, selectProject, plan, files, selectedView, selectView } = useMagent();
+  const { dir, selectProject, plan, files, selectedView, selectView, enterDirector, exitDirector, mode, direction } =
+    useMagent();
 
   const modified = files.filter((f) => f.status === 'modified');
   const created = files.filter((f) => f.status === 'created');
@@ -24,47 +25,114 @@ export const Sidebar = () => {
         />
       </div>
 
+      {/* Mode Selector (Elevated Pill Switch) */}
+      <div className="px-3 pt-3 pb-1 shrink-0">
+        <div
+          className="flex p-1 rounded-lg border transition-all"
+          style={{ background: 'var(--background)', borderColor: 'var(--border)' }}
+        >
+          <button
+            onClick={exitDirector}
+            className="flex-1 text-center py-1.5 rounded-md font-medium transition-all cursor-pointer"
+            style={{
+              background: mode === 'thread' ? 'var(--surface-raised)' : 'transparent',
+              color: mode === 'thread' ? 'var(--foreground)' : 'var(--foreground-muted)',
+              border: mode === 'thread' ? '1px solid var(--border)' : '1px solid transparent',
+              boxShadow: mode === 'thread' ? '0 2px 4px rgba(0,0,0,0.4)' : 'none',
+              fontSize: 12,
+            }}
+          >
+            Planner
+          </button>
+          <button
+            onClick={enterDirector}
+            className="flex-1 text-center py-1.5 rounded-md font-medium transition-all cursor-pointer"
+            style={{
+              background: mode === 'director' ? 'var(--surface-raised)' : 'transparent',
+              color: mode === 'director' ? 'var(--foreground)' : 'var(--foreground-muted)',
+              border: mode === 'director' ? '1px solid var(--border)' : '1px solid transparent',
+              boxShadow: mode === 'director' ? '0 2px 4px rgba(0,0,0,0.4)' : 'none',
+              fontSize: 12,
+            }}
+          >
+            Director
+          </button>
+        </div>
+      </div>
+
+      {mode === 'director' && (
+        <nav className="flex-1 overflow-auto py-3">
+          {!direction ? (
+            <p className="px-4" style={{ color: 'var(--foreground-faint)', fontSize: 13 }}>
+              No active Director thread
+            </p>
+          ) : (
+            <>
+              <SidebarSection label="Direction" />
+              <SidebarItem
+                label="Rationale"
+                active={selectedView.kind === 'direction'}
+                onClick={() => selectView({ kind: 'direction' })}
+              />
+              <SidebarItem
+                label="direction.md"
+                active={selectedView.kind === 'direction-doc'}
+                onClick={() => selectView({ kind: 'direction-doc' })}
+              />
+              <SidebarItem
+                label="conventions.md"
+                active={selectedView.kind === 'conventions-doc'}
+                onClick={() => selectView({ kind: 'conventions-doc' })}
+              />
+            </>
+          )}
+        </nav>
+      )}
+
       {/* current thread */}
-      <nav className="flex-1 overflow-auto py-3">
-        {!plan ? (
-          <p className="px-4" style={{ color: 'var(--foreground-faint)', fontSize: 13 }}>
-            No active thread
-          </p>
-        ) : (
-          <>
-            <SidebarSection label="Plan" />
-            <SidebarItem
-              label={plan.slug}
-              active={selectedView.kind === 'plan'}
-              onClick={() => selectView({ kind: 'plan' })}
-            />
 
-            {files.length > 0 && (
-              <>
-                {modified.length > 0 && <SidebarSection label="Modified" />}
-                {modified.map((f) => (
-                  <SidebarItem
-                    key={f.path}
-                    label={fileName(f.path)}
-                    active={selectedView.kind === 'file' && selectedView.path === f.path}
-                    onClick={() => selectView({ kind: 'file', path: f.path })}
-                  />
-                ))}
+      {mode === 'thread' && (
+        <nav className="flex-1 overflow-auto py-3">
+          {!plan ? (
+            <p className="px-4" style={{ color: 'var(--foreground-faint)', fontSize: 13 }}>
+              No active Planner thread
+            </p>
+          ) : (
+            <>
+              <SidebarSection label="Plan" />
+              <SidebarItem
+                label={plan.slug}
+                active={selectedView.kind === 'plan'}
+                onClick={() => selectView({ kind: 'plan' })}
+              />
 
-                {created.length > 0 && <SidebarSection label="Created" />}
-                {created.map((f) => (
-                  <SidebarItem
-                    key={f.path}
-                    label={fileName(f.path)}
-                    active={selectedView.kind === 'file' && selectedView.path === f.path}
-                    onClick={() => selectView({ kind: 'file', path: f.path })}
-                  />
-                ))}
-              </>
-            )}
-          </>
-        )}
-      </nav>
+              {files.length > 0 && (
+                <>
+                  {modified.length > 0 && <SidebarSection label="Modified" />}
+                  {modified.map((f) => (
+                    <SidebarItem
+                      key={f.path}
+                      label={fileName(f.path)}
+                      active={selectedView.kind === 'file' && selectedView.path === f.path}
+                      onClick={() => selectView({ kind: 'file', path: f.path })}
+                    />
+                  ))}
+
+                  {created.length > 0 && <SidebarSection label="Created" />}
+                  {created.map((f) => (
+                    <SidebarItem
+                      key={f.path}
+                      label={fileName(f.path)}
+                      active={selectedView.kind === 'file' && selectedView.path === f.path}
+                      onClick={() => selectView({ kind: 'file', path: f.path })}
+                    />
+                  ))}
+                </>
+              )}
+            </>
+          )}
+        </nav>
+      )}
     </aside>
   );
 };

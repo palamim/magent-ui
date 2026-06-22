@@ -2,21 +2,35 @@
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { fetchProposal } from '@/core/api/proposal.api';
-import { executePlan, approveExecution, discardExecution, inspectBranch } from '@/core/api/execution.api';
+import { executePlan, apiApproveExecution, apiDiscardExecution, inspectBranch } from '@/core/api/execution.api';
+import { apiApproveDirection, apiDiscardDirection, fetchDirection } from '@/core/api/direction.api';
 import type { Plan } from '@/model/plan.model';
 import type { ExecutionResult, InspectTool } from '@/model/execution.model';
+import { DirectionProposal } from '@/model/direction.model';
 import { FileDiff, parseDiff } from '@/lib/parse-diff';
 import { loadStoredDir, storeDir } from '@/lib/project-storage';
 
+type Mode = 'thread' | 'director';
+
 // what the main panel is currently showing
-type SelectedView = { kind: 'none' } | { kind: 'plan' } | { kind: 'file'; path: string };
+type SelectedView =
+  | { kind: 'empty-plan' }
+  | { kind: 'plan' }
+  | { kind: 'file'; path: string }
+  | { kind: 'empty-direction' }
+  | { kind: 'direction' }
+  | { kind: 'direction-doc' }
+  | { kind: 'conventions-doc' };
 
 interface MagentState {
   dir: string;
+  mode: Mode;
+  direction: DirectionProposal | null;
   plan: Plan | null;
   execution: ExecutionResult | null;
   selectedView: SelectedView;
   files: FileDiff[];
+  directing: boolean;
   proposing: boolean;
   executing: boolean;
   acting: boolean;
@@ -24,13 +38,18 @@ interface MagentState {
 }
 
 interface MagentActions {
+  enterDirector: () => void;
+  exitDirector: () => void;
   selectProject: (dir: string) => void;
   selectView: (view: SelectedView) => void;
+  direct: () => Promise<void>;
   propose: () => Promise<void>;
   execute: () => Promise<void>;
   inspect: (tool: InspectTool) => Promise<void>;
-  approve: () => Promise<void>;
-  discard: () => Promise<void>;
+  approveDirection: () => Promise<void>;
+  discardDirection: () => Promise<void>;
+  approveExecution: () => Promise<void>;
+  discardExecution: () => Promise<void>;
 }
 
 type MagentContextValue = MagentState & MagentActions;
@@ -39,9 +58,15 @@ const MagentContext = createContext<MagentContextValue | null>(null);
 
 export const MagentProvider = ({ children }: { children: ReactNode }) => {
   const [dir, setDirState] = useState('');
+  const [mode, setMode] = useState<Mode>('thread');
+
+  // Director Agent
+  const [direction, setDirection] = useState<DirectionProposal | null>(null);
+  const [directing, setDirecting] = useState(false);
+
   const [plan, setPlan] = useState<Plan | null>(null);
   const [execution, setExecution] = useState<ExecutionResult | null>(null);
-  const [selectedView, setSelectedView] = useState<SelectedView>({ kind: 'none' });
+  const [selectedView, setSelectedView] = useState<SelectedView>({ kind: 'empty-plan' });
   const [files, setFiles] = useState<FileDiff[]>([]);
 
   const [proposing, setProposing] = useState(false);
@@ -58,6 +83,59 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
   const selectProject = (path: string) => {
     setDirState(path);
     storeDir(path);
+  };
+
+  const enterDirector = () => {
+    resetThread();
+    setMode('director');
+    setSelectedView({ kind: 'empty-direction' });
+  };
+
+  const exitDirector = () => {
+    setDirection(null);
+    setMode('thread');
+    setSelectedView({ kind: 'empty-plan' });
+  };
+
+  const direct = async () => {
+    setDirecting(true);
+    setError(null);
+    setDirection(null);
+    try {
+      const result = await fetchDirection(dir);
+      setDirection(result);
+      setSelectedView({ kind: 'direction' });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Director failed');
+    } finally {
+      setDirecting(false);
+    }
+  };
+
+  const approveDirection = async () => {
+    if (!direction) return;
+    setActing(true);
+    try {
+      await apiApproveDirection(dir, direction.rationale, direction.direction, direction.conventions, [], '');
+      exitDirector();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Approve failed');
+    } finally {
+      setActing(false);
+    }
+  };
+
+  const discardDirection = async () => {
+    if (!direction) return;
+    setActing(true);
+    try {
+      await apiDiscardDirection(dir, direction.rationale, [], '');
+      setDirection(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Discard failed');
+    } finally {
+      setActing(false);
+    }
   };
 
   const propose = async () => {
@@ -105,12 +183,12 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const approve = async () => {
+  const approveExecution = async () => {
     if (!plan || !execution) return;
     setActing(true);
     setError(null);
     try {
-      await approveExecution(dir, execution.branch, plan);
+      await apiApproveExecution(dir, execution.branch, plan);
       resetThread();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Approve failed');
@@ -119,12 +197,12 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const discard = async () => {
+  const discardExecution = async () => {
     if (!plan || !execution) return;
     setActing(true);
     setError(null);
     try {
-      await discardExecution(dir, execution.branch, plan);
+      await apiDiscardExecution(dir, execution.branch, plan);
       resetThread();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Discard failed');
@@ -136,7 +214,7 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
   const resetThread = () => {
     setPlan(null);
     setExecution(null);
-    setSelectedView({ kind: 'none' });
+    setSelectedView({ kind: 'empty-plan' });
     setFiles([]);
   };
 
@@ -144,21 +222,29 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
 
   const value: MagentContextValue = {
     dir,
+    mode,
+    direction,
     plan,
     execution,
     selectedView,
     files,
+    directing,
     proposing,
     executing,
     acting,
     error,
+    enterDirector,
+    exitDirector,
     selectProject,
     selectView,
+    direct,
     propose,
     execute,
     inspect,
-    approve,
-    discard,
+    approveDirection,
+    discardDirection,
+    approveExecution,
+    discardExecution,
   };
 
   return <MagentContext.Provider value={value}>{children}</MagentContext.Provider>;

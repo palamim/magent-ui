@@ -4,11 +4,11 @@ export interface ExecutionResult {
   diff: string; // raw unified-diff text for now
 }
 
-export interface ApproveResult {
+export interface ApproveExecutionResult {
   merged: boolean;
   pushed: boolean;
 }
-export interface DiscardResult {
+export interface DiscardExecutionResult {
   discarded: boolean;
 }
 

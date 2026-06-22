@@ -4,7 +4,7 @@ import { InspectTool } from '@/model/execution.model';
 import { useMagent } from '@/providers/magent.provider';
 
 export const TopBar = () => {
-  const { execution, acting, approve, discard, inspect } = useMagent();
+  const { execution, acting, approveExecution, discardExecution, inspect } = useMagent();
 
   return (
     <header
@@ -38,7 +38,7 @@ export const TopBar = () => {
             <option value="ghostty">Ghostty</option>
           </select>
           <button
-            onClick={discard}
+            onClick={discardExecution}
             disabled={acting}
             className="px-3 py-1.5 rounded transition-colors"
             style={{
@@ -53,7 +53,7 @@ export const TopBar = () => {
             Discard
           </button>
           <button
-            onClick={approve}
+            onClick={approveExecution}
             disabled={acting}
             className="px-3 py-1.5 rounded transition-colors"
             style={{
