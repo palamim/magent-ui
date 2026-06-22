@@ -35,32 +35,32 @@ export const Sidebar = () => {
             onClick={exitDirector}
             className="flex-1 text-center py-1.5 rounded-md font-medium transition-all cursor-pointer"
             style={{
-              background: mode === 'thread' ? 'var(--surface-raised)' : 'transparent',
-              color: mode === 'thread' ? 'var(--foreground)' : 'var(--foreground-muted)',
-              border: mode === 'thread' ? '1px solid var(--border)' : '1px solid transparent',
-              boxShadow: mode === 'thread' ? '0 2px 4px rgba(0,0,0,0.4)' : 'none',
+              background: mode === 'build' ? 'var(--surface-raised)' : 'transparent',
+              color: mode === 'build' ? 'var(--foreground)' : 'var(--foreground-muted)',
+              border: mode === 'build' ? '1px solid var(--border)' : '1px solid transparent',
+              boxShadow: mode === 'build' ? '0 2px 4px rgba(0,0,0,0.4)' : 'none',
               fontSize: 12,
             }}
           >
-            Planner
+            Build
           </button>
           <button
             onClick={enterDirector}
             className="flex-1 text-center py-1.5 rounded-md font-medium transition-all cursor-pointer"
             style={{
-              background: mode === 'director' ? 'var(--surface-raised)' : 'transparent',
-              color: mode === 'director' ? 'var(--foreground)' : 'var(--foreground-muted)',
-              border: mode === 'director' ? '1px solid var(--border)' : '1px solid transparent',
-              boxShadow: mode === 'director' ? '0 2px 4px rgba(0,0,0,0.4)' : 'none',
+              background: mode === 'direct' ? 'var(--surface-raised)' : 'transparent',
+              color: mode === 'direct' ? 'var(--foreground)' : 'var(--foreground-muted)',
+              border: mode === 'direct' ? '1px solid var(--border)' : '1px solid transparent',
+              boxShadow: mode === 'direct' ? '0 2px 4px rgba(0,0,0,0.4)' : 'none',
               fontSize: 12,
             }}
           >
-            Director
+            Direct
           </button>
         </div>
       </div>
 
-      {mode === 'director' && (
+      {mode === 'direct' && (
         <nav className="flex-1 overflow-auto py-3">
           {!direction ? (
             <p className="px-4" style={{ color: 'var(--foreground-faint)', fontSize: 13 }}>
@@ -89,7 +89,7 @@ export const Sidebar = () => {
 
       {/* current thread */}
 
-      {mode === 'thread' && (
+      {mode === 'build' && (
         <nav className="flex-1 overflow-auto py-3">
           {!plan ? (
             <p className="px-4" style={{ color: 'var(--foreground-faint)', fontSize: 13 }}>

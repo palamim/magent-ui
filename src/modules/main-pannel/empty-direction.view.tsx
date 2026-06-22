@@ -7,7 +7,7 @@ export const EmptyDirection = () => {
 
   return (
     <div className="flex h-full flex-col items-center justify-center gap-4">
-      <p style={{ color: 'var(--foreground-muted)' }}>Let&apos;s think of the next frontier!</p>
+      <p style={{ color: 'var(--foreground-muted)' }}>Let&apos;s talk direction</p>
       <button
         onClick={direct}
         disabled={directing || !dir}
@@ -19,7 +19,7 @@ export const EmptyDirection = () => {
           cursor: directing || !dir ? 'default' : 'pointer',
         }}
       >
-        {directing ? 'Thinking…' : 'Propose next frontier'}
+        {directing ? 'Thinking…' : 'Propose next direction'}
       </button>
       {!dir && (
         <p style={{ color: 'var(--foreground-faint)', fontSize: 12 }}>Set a project path in the sidebar first</p>

@@ -10,7 +10,7 @@ import { DirectionProposal } from '@/model/direction.model';
 import { FileDiff, parseDiff } from '@/lib/parse-diff';
 import { loadStoredDir, storeDir } from '@/lib/project-storage';
 
-type Mode = 'thread' | 'director';
+type Mode = 'build' | 'direct';
 
 // what the main panel is currently showing
 type SelectedView =
@@ -57,7 +57,7 @@ const MagentContext = createContext<MagentContextValue | null>(null);
 
 export const MagentProvider = ({ children }: { children: ReactNode }) => {
   const [dir, setDirState] = useState('');
-  const [mode, setMode] = useState<Mode>('thread');
+  const [mode, setMode] = useState<Mode>('build');
 
   // Director Agent
   const [direction, setDirection] = useState<DirectionProposal | null>(null);
@@ -86,13 +86,13 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
 
   const enterDirector = () => {
     resetThread();
-    setMode('director');
+    setMode('direct');
     setSelectedView({ kind: 'empty-direction' });
   };
 
   const exitDirector = () => {
     setDirection(null);
-    setMode('thread');
+    setMode('build');
     setSelectedView({ kind: 'empty-plan' });
   };
 

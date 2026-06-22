@@ -19,7 +19,7 @@ export const EmptyPlan = () => {
           cursor: proposing || !dir ? 'default' : 'pointer',
         }}
       >
-        {proposing ? 'Thinking…' : 'Propose next step'}
+        {proposing ? 'Thinking…' : 'Propose next build'}
       </button>
       {!dir && (
         <p style={{ color: 'var(--foreground-faint)', fontSize: 12 }}>Set a project path in the sidebar first</p>
