@@ -31,6 +31,7 @@ interface MagentState {
   planning: boolean;
   execution: ExecutionResult | null;
   executing: boolean;
+  executionStatus: 'committed' | 'no-net-changes' | 'gave-up' | null;
   selectedView: SelectedView;
   files: FileDiff[];
   acting: boolean;
@@ -54,6 +55,7 @@ interface MagentActions {
   approveExecution: () => Promise<void>;
   discardExecution: () => Promise<void>;
   refineExecution: (text: string) => Promise<void>;
+  executionStatus: 'committed' | 'no-net-changes' | 'gave-up' | null;
 }
 
 type MagentContextValue = MagentState & MagentActions;
@@ -71,6 +73,7 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
   const [selectedView, setSelectedView] = useState<SelectedView>({ kind: 'empty-plan' });
   const [files, setFiles] = useState<FileDiff[]>([]);
   const [executing, setExecuting] = useState(false);
+  const [executionStatus, setExecutionStatus] = useState<'committed' | 'no-net-changes' | 'gave-up' | null>(null);
   const [acting, setActing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [execRefinements, setExecRefinements] = useState<string[]>([]);
@@ -200,11 +203,18 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
     try {
       await apiApprovePlan(dir, plan, [], '');
       const result = await apiExecute(dir, plan);
-      setExecution(result);
-      const parsed = parseDiff(result.diff);
-      setFiles(parsed);
-      if (parsed.length > 0) {
-        setSelectedView({ kind: 'file', path: parsed[0].path });
+      if (result.status === 'committed') {
+        setExecutionStatus('committed');
+        setExecution(result);
+        const parsed = parseDiff(result.diff);
+        setFiles(parsed);
+        if (parsed.length > 0) {
+          setSelectedView({ kind: 'file', path: parsed[0].path });
+        }
+      } else if (result.status === 'no-net-changes') {
+        setExecutionStatus('no-net-changes');
+      } else if (result.status === 'gave-up') {
+        setExecutionStatus('gave-up');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Execution failed');
@@ -258,10 +268,17 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
       const next = [...execRefinements, text];
       setExecRefinements(next);
       const result = await apiExecute(dir, plan, [text]);
-      setExecution(result);
-      const parsed = parseDiff(result.diff);
-      setFiles(parsed);
-      if (parsed.length > 0) setSelectedView({ kind: 'file', path: parsed[0].path });
+      if (result.status === 'committed') {
+        setExecutionStatus('committed');
+        setExecution(result);
+        const parsed = parseDiff(result.diff);
+        setFiles(parsed);
+        if (parsed.length > 0) setSelectedView({ kind: 'file', path: parsed[0].path });
+      } else if (result.status === 'no-net-changes') {
+        setExecutionStatus('no-net-changes');
+      } else if (result.status === 'gave-up') {
+        setExecutionStatus('gave-up');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Refine failed');
     } finally {
@@ -272,6 +289,7 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
   const resetThread = () => {
     setPlan(null);
     setExecution(null);
+    setExecutionStatus(null);
     setSelectedView({ kind: 'empty-plan' });
     setFiles([]);
   };
@@ -294,6 +312,7 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
     refinePlan,
     execution,
     executing,
+    executionStatus,
     execute,
     approveExecution,
     discardExecution,

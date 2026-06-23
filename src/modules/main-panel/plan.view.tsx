@@ -4,7 +4,7 @@ import { ThinkingDots } from '@/components/thinking-dots';
 import { useMagent } from '@/providers/magent.provider';
 
 export const PlanView = () => {
-  const { plan, discardPlan, execute, execution, executing, error, acting } = useMagent();
+  const { plan, discardPlan, execute, execution, executing, error, acting, executionStatus } = useMagent();
 
   if (!plan) return null;
 
@@ -34,7 +34,7 @@ export const PlanView = () => {
       )}
 
       {/* Run lives with the plan — execute this proposal */}
-      {!execution && (
+      {!execution && !executionStatus && (
         <>
           <button
             onClick={execute}
@@ -72,6 +72,52 @@ export const PlanView = () => {
             </button>
           )}
         </>
+      )}
+
+      {executionStatus === 'no-net-changes' && (
+        <div className="mt-6">
+          <p style={{ color: 'var(--foreground-muted)', fontSize: 13, textAlign: 'center' }}>
+            The agent ran but found nothing to change — try refining the plan
+          </p>
+          <div className="flex justify-center gap-2 mt-4">
+            <button
+              onClick={() => discardPlan('')}
+              disabled={acting}
+              className="px-4 py-2 rounded"
+              style={{
+                background: 'transparent',
+                border: '1px solid var(--negative-border)',
+                color: 'var(--negative)',
+                fontSize: 13,
+              }}
+            >
+              Discard
+            </button>
+          </div>
+        </div>
+      )}
+
+      {executionStatus === 'gave-up' && (
+        <div className="mt-6">
+          <p style={{ color: 'var(--foreground-muted)', fontSize: 13, textAlign: 'center' }}>
+            The agent gave up — try refining the plan or check the project path.
+          </p>
+          <div className="flex justify-center gap-2 mt-4">
+            <button
+              onClick={() => discardPlan('')}
+              disabled={acting}
+              className="px-4 py-2 rounded"
+              style={{
+                background: 'transparent',
+                border: '1px solid var(--negative-border)',
+                color: 'var(--negative)',
+                fontSize: 13,
+              }}
+            >
+              Discard
+            </button>
+          </div>
+        </div>
       )}
 
       {error && (
