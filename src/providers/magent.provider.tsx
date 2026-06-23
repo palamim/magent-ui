@@ -13,7 +13,7 @@ import { loadStoredDir, storeDir } from '@/lib/project-storage';
 type Mode = 'build' | 'direct';
 
 // what the main panel is currently showing
-type SelectedView =
+export type SelectedView =
   | { kind: 'empty-plan' }
   | { kind: 'plan' }
   | { kind: 'file'; path: string }
