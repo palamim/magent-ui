@@ -6,7 +6,7 @@ export const executePlan = (dir: string, plan: Plan, feedback: string[] = []): P
   apiClient.post<ExecutionResult>('/execute', { dir, plan, feedback });
 
 export const inspectBranch = (dir: string, branch: string, tool: InspectTool): Promise<{ opened: boolean }> =>
-  apiClient.post('/inspect', { dir, branch, tool });
+  apiClient.post('/inspect-execution', { dir, branch, tool });
 
 export const apiApproveExecution = (
   dir: string,
@@ -15,7 +15,7 @@ export const apiApproveExecution = (
   feedback: string[] = [],
   note: string = '',
 ): Promise<ApproveExecutionResult> =>
-  apiClient.post<ApproveExecutionResult>('/approve', { dir, branch, plan, feedback, note });
+  apiClient.post<ApproveExecutionResult>('/approve-execution', { dir, branch, plan, feedback, note });
 
 export const apiDiscardExecution = (
   dir: string,
@@ -24,4 +24,4 @@ export const apiDiscardExecution = (
   feedback: string[] = [],
   note: string = '',
 ): Promise<DiscardExecutionResult> =>
-  apiClient.post<DiscardExecutionResult>('/discard', { dir, branch, plan, feedback, note });
+  apiClient.post<DiscardExecutionResult>('/discard-execution', { dir, branch, plan, feedback, note });

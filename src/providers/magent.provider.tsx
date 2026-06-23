@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { fetchProposal } from '@/core/api/proposal.api';
+import { fetchPlan } from '@/core/api/plan.api';
 import { executePlan, apiApproveExecution, apiDiscardExecution, inspectBranch } from '@/core/api/execution.api';
 import { apiApproveDirection, apiDiscardDirection, fetchDirection } from '@/core/api/direction.api';
 import type { Plan } from '@/model/plan.model';
@@ -143,7 +143,7 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
     setPlan(null);
     setExecution(null);
     try {
-      const { plan } = await fetchProposal(dir);
+      const { plan } = await fetchPlan(dir);
       setPlan(plan);
       setSelectedView({ kind: 'plan' });
     } catch (err) {
