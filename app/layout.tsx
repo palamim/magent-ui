@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'Magent',
   description: 'Set the direction. Magent plans and builds toward it.',
-  icons: { icon: '/favicon.ico' },
+  icons: { icon: '/favicon.svg' },
 };
 
 const RootLayout = ({
