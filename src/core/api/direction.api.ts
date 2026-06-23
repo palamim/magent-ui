@@ -1,7 +1,7 @@
 import { apiClient } from '@/core/api/client';
 import { ApproveDirectionResult, DirectionProposal, DiscardDirectionResult } from '@/model/direction.model';
 
-export const fetchDirection = (dir: string): Promise<DirectionProposal> =>
+export const apiDirect = (dir: string): Promise<DirectionProposal> =>
   apiClient.post<DirectionProposal>('/direct', { dir });
 
 export const apiApproveDirection = (
@@ -28,3 +28,6 @@ export const apiDiscardDirection = (
   comment: string = '',
 ): Promise<DiscardDirectionResult> =>
   apiClient.post<DiscardDirectionResult>('/discard-direction', { dir, rationale, refinements, comment });
+
+export const apiRefineDirection = (dir: string, rationale: string, comment: string): Promise<{ recorded: boolean }> =>
+  apiClient.post('/refine-direction', { dir, rationale, comment });

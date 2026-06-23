@@ -2,10 +2,10 @@ import { apiClient } from '@/core/api/client';
 import type { Plan } from '@/model/plan.model';
 import { ExecutionResult, ApproveExecutionResult, DiscardExecutionResult, InspectTool } from '@/model/execution.model';
 
-export const executePlan = (dir: string, plan: Plan, feedback: string[] = []): Promise<ExecutionResult> =>
+export const apiExecute = (dir: string, plan: Plan, feedback: string[] = []): Promise<ExecutionResult> =>
   apiClient.post<ExecutionResult>('/execute', { dir, plan, feedback });
 
-export const inspectBranch = (dir: string, branch: string, tool: InspectTool): Promise<{ opened: boolean }> =>
+export const apiInspectExecution = (dir: string, branch: string, tool: InspectTool): Promise<{ opened: boolean }> =>
   apiClient.post('/inspect-execution', { dir, branch, tool });
 
 export const apiApproveExecution = (

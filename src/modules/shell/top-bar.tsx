@@ -4,7 +4,7 @@ import { InspectTool } from '@/model/execution.model';
 import { useMagent } from '@/providers/magent.provider';
 
 export const TopBar = () => {
-  const { execution, acting, approveExecution, discardExecution, inspect } = useMagent();
+  const { execution, acting, approveExecution, discardExecution, inspectExecution } = useMagent();
 
   return (
     <header
@@ -16,7 +16,7 @@ export const TopBar = () => {
           <select
             onChange={(e) => {
               if (e.target.value) {
-                inspect(e.target.value as InspectTool);
+                inspectExecution(e.target.value as InspectTool);
                 e.target.value = '';
               }
             }}
