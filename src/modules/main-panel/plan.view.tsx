@@ -56,19 +56,21 @@ export const PlanView = () => {
               'Run this'
             )}
           </button>
-          <button
-            onClick={() => discardPlan('')}
-            disabled={acting}
-            className="mt-6 ml-2 px-4 py-2 rounded"
-            style={{
-              background: 'transparent',
-              border: '1px solid var(--negative-border)',
-              color: 'var(--negative)',
-              fontSize: 13,
-            }}
-          >
-            Discard
-          </button>
+          {!executing && (
+            <button
+              onClick={() => discardPlan('')}
+              disabled={acting}
+              className="mt-6 ml-2 px-4 py-2 rounded"
+              style={{
+                background: 'transparent',
+                border: '1px solid var(--negative-border)',
+                color: 'var(--negative)',
+                fontSize: 13,
+              }}
+            >
+              Discard
+            </button>
+          )}
         </>
       )}
 
