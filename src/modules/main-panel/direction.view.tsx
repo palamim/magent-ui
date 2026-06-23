@@ -1,9 +1,10 @@
 'use client';
 
+import { ThinkingDots } from '@/components/thinking-dots';
 import { useMagent } from '@/providers/magent.provider';
 
 export const DirectionView = () => {
-  const { direction, approveDirection, acting, error } = useMagent();
+  const { direction, discardDirection, approveDirection, acting, error } = useMagent();
 
   if (!direction) return null;
 
@@ -31,7 +32,27 @@ export const DirectionView = () => {
           cursor: acting ? 'default' : 'pointer',
         }}
       >
-        {acting ? 'Running…' : 'Approve'}
+        {acting ? (
+          <>
+            Writing
+            <ThinkingDots />
+          </>
+        ) : (
+          'Approve'
+        )}
+      </button>
+      <button
+        onClick={() => discardDirection()}
+        disabled={acting}
+        className="mt-6 ml-2 px-4 py-2 rounded"
+        style={{
+          background: 'transparent',
+          border: '1px solid var(--negative-border)',
+          color: 'var(--negative)',
+          fontSize: 13,
+        }}
+      >
+        Discard
       </button>
 
       {error && (
