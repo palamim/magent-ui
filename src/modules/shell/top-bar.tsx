@@ -1,7 +1,7 @@
 'use client';
 
 import { DevBadge } from '@/components/dev-badge';
-import { OpenIcon } from '@/components/open-icon';
+import { VSCodeIcon } from '@/components/vs-code-icon';
 import { InspectTool } from '@/model/execution.model';
 import { useMagent } from '@/providers/magent.provider';
 
@@ -17,7 +17,7 @@ export const TopBar = () => {
         <DevBadge />
       </div>
       {execution ? (
-        <>
+        <div className="flex items-center justify-between gap-2 h-12 px-4 shrink-0">
           <button
             onClick={() => inspectExecution('vscode')}
             title="Open in VS Code"
@@ -26,9 +26,11 @@ export const TopBar = () => {
               background: 'var(--surface-raised)',
               color: 'var(--foreground-muted)',
               border: '1px solid var(--border)',
+              fontSize: 13,
+              cursor: 'pointer',
             }}
           >
-            <OpenIcon />
+            <VSCodeIcon />
           </button>
           <select
             onChange={(e) => {
@@ -44,10 +46,11 @@ export const TopBar = () => {
               color: 'var(--foreground-muted)',
               border: '1px solid var(--border)',
               fontSize: 13,
+              cursor: 'pointer',
             }}
           >
             <option value="" disabled>
-              Inspect…
+              Inspect
             </option>
             <option value="vscode">VS Code</option>
             <option value="finder">Finder</option>
@@ -83,9 +86,9 @@ export const TopBar = () => {
           >
             {acting ? 'Working…' : 'Approve'}
           </button>
-        </>
+        </div>
       ) : (
-        <span style={{ color: 'var(--foreground-faint)', fontSize: 13 }}>—</span>
+        <span style={{ color: 'var(--foreground-faint)', fontSize: 13 }}></span>
       )}
     </header>
   );
