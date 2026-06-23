@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { AppShell } from '@/modules/shell/app-shell';
 import { MagentProvider } from '@/providers/magent.provider';
+import { ConnectionGate } from '@/providers/connection-gate';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -27,9 +28,11 @@ const RootLayout = ({
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
-        <MagentProvider>
-          <AppShell>{children}</AppShell>
-        </MagentProvider>
+        <ConnectionGate>
+          <MagentProvider>
+            <AppShell>{children}</AppShell>
+          </MagentProvider>
+        </ConnectionGate>
       </body>
     </html>
   );
