@@ -1,13 +1,13 @@
 'use client';
 
 import { SelectedView, useMagent } from '@/providers/magent.provider';
-import { PlanView } from '@/modules/main-pannel/plan.view';
-import { FileDiffView } from '@/modules/main-pannel/file-diff.view';
-import { EmptyPlan } from '@/modules/main-pannel/empty-plan.view';
-import { DirectionView } from '@/modules/main-pannel/direction.view';
-import { DocDiffView } from '@/modules/main-pannel/doc-diff.view';
-import { EmptyDirection } from '@/modules/main-pannel/empty-direction.view';
-import { ChatBar } from '@/modules/main-pannel/chat-bar';
+import { PlanView } from '@/modules/main-panel/plan.view';
+import { FileDiffView } from '@/modules/main-panel/file-diff.view';
+import { EmptyPlan } from '@/modules/main-panel/empty-plan.view';
+import { DirectionView } from '@/modules/main-panel/direction.view';
+import { DocDiffView } from '@/modules/main-panel/doc-diff.view';
+import { EmptyDirection } from '@/modules/main-panel/empty-direction.view';
+import { ChatBar } from '@/modules/main-panel/chat-bar';
 
 export const MainPanel = () => {
   const { selectedView } = useMagent();
