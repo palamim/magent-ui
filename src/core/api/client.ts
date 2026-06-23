@@ -1,6 +1,6 @@
 import { ApiError } from '@/core/api/api-error';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_MAGENT_API_URL ?? 'http://localhost:4000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_MAGENT_API_URL ?? 'http://localhost:7842/api';
 
 const post = async <TResponse>(path: string, body: unknown): Promise<TResponse> => {
   const response = await fetch(`${API_BASE_URL}${path}`, {
