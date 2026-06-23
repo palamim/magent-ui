@@ -1,12 +1,7 @@
 'use client';
 
-import { usePersistedBool } from '@/hooks/user-persisted-state';
+import { useAutoPush } from '@/hooks/use-auto-push.hook';
 import { useState } from 'react';
-
-export const useAutoPush = () => {
-  const [autoPush, setAutoPush] = usePersistedBool('magent:auto-push', false);
-  return { autoPush, toggle: () => setAutoPush(!autoPush) };
-};
 
 export const SettingsPanel = () => {
   const [open, setOpen] = useState(false);

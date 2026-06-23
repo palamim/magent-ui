@@ -8,8 +8,8 @@ import type { Plan } from '@/model/plan.model';
 import type { ExecutionResult, InspectTool } from '@/model/execution.model';
 import { DirectionProposal } from '@/model/direction.model';
 import { FileDiff, parseDiff } from '@/lib/parse-diff';
-import { useAutoPush } from '@/modules/shell/settings-panel';
-import { usePersistedString } from '@/hooks/user-persisted-state';
+import { usePersistedString } from '@/hooks/user-persisted-state.hook';
+import { useAutoPush } from '@/hooks/use-auto-push.hook';
 
 type Mode = 'build' | 'direct';
 
