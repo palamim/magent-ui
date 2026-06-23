@@ -45,96 +45,108 @@ const parseDiffLines = (diff: string): DiffLine[] => {
   return result;
 };
 
-const lineNumStyle: React.CSSProperties = {
-  width: '3rem',
-  textAlign: 'right',
-  color: 'var(--foreground-faint)',
-  fontSize: 13,
-  background: 'var(--code-bg)',
-  padding: '0 0.5rem',
-  borderRight: '1px solid var(--code-border)',
-  lineHeight: 1.5,
-  fontFamily: 'var(--font-geist-mono), monospace',
-  userSelect: 'none',
-  flexShrink: 0,
-};
-
 const renderDiffLines = (diff: string) => {
   const lines = parseDiffLines(diff);
 
-  const oldLineNums = lines.map((l, i) => (
-    <div key={i} style={lineNumStyle}>
-      {l.oldLineNum !== null ? l.oldLineNum : '\u00a0'}
-    </div>
-  ));
-
-  const newLineNums = lines.map((l, i) => (
-    <div key={i} style={{ ...lineNumStyle, borderRight: 'none' }}>
-      {l.newLineNum !== null ? l.newLineNum : '\u00a0'}
-    </div>
-  ));
-
-  const contentLines = lines.map((l, i) => {
+  const rows = lines.map((l, i) => {
     if (l.type === 'hunk') {
       return (
         <div
           key={i}
           style={{
+            display: 'flex',
             background: 'var(--surface-raised)',
-            color: 'var(--diff-hunk)',
             fontSize: 13,
             lineHeight: 1.5,
             fontFamily: 'var(--font-geist-mono), monospace',
-            whiteSpace: 'pre',
+            minWidth: 'max-content',
           }}
         >
-          <span
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              border: '1px solid var(--border)',
-              borderRadius: '0.25rem',
-              padding: '0.375rem 0.75rem',
-              margin: '0.25rem 0.5rem',
-              fontSize: 12,
-              fontWeight: 500,
-            }}
-          >
-            {l.content.trim()}
-          </span>
+          <div style={{ width: '3rem', flexShrink: 0, padding: '0 0.5rem' }}>{' '}</div>
+          <div style={{ width: '3rem', flexShrink: 0, padding: '0 0.5rem' }}>{' '}</div>
+          <div style={{ flex: 1, padding: '0 0.5rem', display: 'flex', alignItems: 'center' }}>
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                border: '1px solid var(--border)',
+                borderRadius: '0.25rem',
+                padding: '0.375rem 0.75rem',
+                margin: '0.25rem 0',
+                fontSize: 12,
+                fontWeight: 500,
+                color: 'var(--diff-hunk)',
+              }}
+            >
+              {l.content.trim()}
+            </span>
+          </div>
         </div>
       );
     }
 
-    const lineStyle: React.CSSProperties = {
-      fontSize: 13,
-      lineHeight: 1.5,
-      fontFamily: 'var(--font-geist-mono), monospace',
-      whiteSpace: 'pre',
-      padding: '0 0.5rem',
-      ...(l.type === 'add'
-        ? { background: 'var(--positive-bg)', color: 'var(--diff-add-text)' }
+    const rowBg =
+      l.type === 'add'
+        ? 'var(--positive-bg)'
         : l.type === 'remove'
-          ? { background: 'var(--negative-bg)', color: 'var(--diff-remove-text)' }
-          : { color: 'var(--diff-context)' }),
+          ? 'var(--negative-bg)'
+          : 'transparent';
+
+    const textColor =
+      l.type === 'add'
+        ? 'var(--diff-add-text)'
+        : l.type === 'remove'
+          ? 'var(--diff-remove-text)'
+          : 'var(--diff-context)';
+
+    const lineNumCellStyle: React.CSSProperties = {
+      width: '3rem',
+      textAlign: 'right',
+      color: 'var(--foreground-faint)',
+      fontSize: 13,
+      padding: '0 0.5rem',
+      flexShrink: 0,
+      userSelect: 'none',
     };
 
     return (
-      <div key={i} style={lineStyle}>
-        {l.content || '\u00a0'}
+      <div
+        key={i}
+        style={{
+          display: 'flex',
+          background: rowBg,
+          fontSize: 13,
+          lineHeight: 1.5,
+          fontFamily: 'var(--font-geist-mono), monospace',
+          minWidth: 'max-content',
+        }}
+      >
+        <div style={lineNumCellStyle}>
+          {l.oldLineNum !== null ? l.oldLineNum : '\u00a0'}
+        </div>
+        <div style={lineNumCellStyle}>
+          {l.newLineNum !== null ? l.newLineNum : '\u00a0'}
+        </div>
+        <div style={{ flex: 1, padding: '0 0.5rem', whiteSpace: 'pre', color: textColor }}>
+          {l.content || '\u00a0'}
+        </div>
       </div>
     );
   });
 
   return (
-    <div className="flex flex-1 overflow-hidden" style={{ background: 'var(--code-bg)' }}>
-      {/* Line number columns */}
-      <div style={{ display: 'flex', flexShrink: 0, borderRight: '1px solid var(--code-border)' }}>
-        <div style={{ display: 'flex', flexDirection: 'column' }}>{oldLineNums}</div>
-        <div style={{ display: 'flex', flexDirection: 'column' }}>{newLineNums}</div>
+    <div className="flex-1 overflow-hidden">
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          overflowX: 'auto',
+          background: 'var(--code-bg)',
+          flex: 1,
+        }}
+      >
+        {rows}
       </div>
-      {/* Content column */}
-      <div style={{ flex: 1, overflowX: 'auto' }}>{contentLines}</div>
     </div>
   );
 };
