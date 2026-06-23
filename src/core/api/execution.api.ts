@@ -13,16 +13,16 @@ export const apiApproveExecution = (
   branch: string,
   plan: Plan,
   push: boolean,
-  feedback: string[] = [],
-  note: string = '',
+  refinements: string[] = [],
+  comment: string = '',
 ): Promise<ApproveExecutionResult> =>
-  apiClient.post<ApproveExecutionResult>('/approve-execution', { dir, branch, plan, feedback, note });
+  apiClient.post<ApproveExecutionResult>('/approve-execution', { dir, branch, plan, push, refinements, comment });
 
 export const apiDiscardExecution = (
   dir: string,
   branch: string,
   plan: Plan,
-  feedback: string[] = [],
-  note: string = '',
+  refinements: string[] = [],
+  comment: string = '',
 ): Promise<DiscardExecutionResult> =>
-  apiClient.post<DiscardExecutionResult>('/discard-execution', { dir, branch, plan, feedback, note });
+  apiClient.post<DiscardExecutionResult>('/discard-execution', { dir, branch, plan, refinements, comment });
