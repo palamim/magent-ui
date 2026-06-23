@@ -1,6 +1,7 @@
 'use client';
 
 import { useMagent } from '@/providers/magent.provider';
+import { SettingsPanel } from './settings-panel';
 
 export const Sidebar = () => {
   const { dir, selectProject, plan, files, selectedView, selectView, enterDirector, exitDirector, mode, direction } =
@@ -131,6 +132,7 @@ export const Sidebar = () => {
           )}
         </nav>
       )}
+      <SettingsPanel />
     </aside>
   );
 };

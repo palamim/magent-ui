@@ -12,6 +12,7 @@ export const apiApproveExecution = (
   dir: string,
   branch: string,
   plan: Plan,
+  push: boolean,
   feedback: string[] = [],
   note: string = '',
 ): Promise<ApproveExecutionResult> =>
