@@ -1,5 +1,6 @@
 'use client';
 
+import { DevBadge } from '@/components/dev-badge';
 import { OpenIcon } from '@/components/open-icon';
 import { InspectTool } from '@/model/execution.model';
 import { useMagent } from '@/providers/magent.provider';
@@ -9,9 +10,12 @@ export const TopBar = () => {
 
   return (
     <header
-      className="flex items-center justify-end gap-2 h-12 px-4 border-b shrink-0"
+      className="flex items-center justify-between gap-2 h-12 px-4 border-b shrink-0"
       style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
     >
+      <div className="flex items-center gap-2">
+        <DevBadge />
+      </div>
       {execution ? (
         <>
           <button

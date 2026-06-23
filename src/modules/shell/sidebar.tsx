@@ -7,6 +7,8 @@ export const Sidebar = () => {
   const { dir, selectProject, plan, files, selectedView, selectView, enterDirector, exitDirector, mode, direction } =
     useMagent();
 
+  const projectName = dir ? dir.split('/').filter(Boolean).pop() : null;
+
   const modified = files.filter((f) => f.status === 'modified');
   const created = files.filter((f) => f.status === 'created');
 
@@ -25,6 +27,19 @@ export const Sidebar = () => {
           style={{ color: 'var(--foreground)', fontSize: 13 }}
         />
       </div>
+      {projectName && (
+        <span
+          className="px-2 py-0.5 rounded shrink-0"
+          style={{
+            background: projectName.includes('target') ? 'var(--running)' : 'var(--surface-raised)',
+            color: projectName.includes('target') ? 'var(--background)' : 'var(--foreground-muted)',
+            fontSize: 10,
+            fontWeight: 700,
+          }}
+        >
+          {projectName}
+        </span>
+      )}
 
       {/* mode selector */}
       <div className="px-3 pt-3 pb-1 shrink-0">
