@@ -135,7 +135,7 @@ const renderDiffLines = (diff: string) => {
   });
 
   return (
-    <div className="flex-1 overflow-hidden">
+    <div className="flex-1 overflow-y-auto">
       <div
         style={{
           display: 'flex',
