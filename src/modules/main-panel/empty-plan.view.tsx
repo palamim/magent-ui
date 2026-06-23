@@ -1,5 +1,6 @@
 'use client';
 
+import { ThinkingDots } from '@/components/thinking-dots';
 import { useMagent } from '@/providers/magent.provider';
 
 export const EmptyPlan = () => {
@@ -19,7 +20,14 @@ export const EmptyPlan = () => {
           cursor: planning || !dir ? 'default' : 'pointer',
         }}
       >
-        {planning ? 'Thinking…' : 'Propose next build'}
+        {planning ? (
+          <>
+            Thinking
+            <ThinkingDots />
+          </>
+        ) : (
+          'Propose next build'
+        )}
       </button>
       {!dir && (
         <p style={{ color: 'var(--foreground-faint)', fontSize: 12 }}>Set a project path in the sidebar first</p>

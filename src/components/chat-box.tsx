@@ -16,9 +16,9 @@ export const ChatBox = ({ placeholder, onSubmit, disabled, loading }: ChatBoxPro
   };
 
   return (
-    <div className="border-t px-16 py-3 shrink-0" style={{ borderColor: 'var(--border)' }}>
+    <div className="border-t px-8 py-3 shrink-0" style={{ borderColor: 'var(--border)' }}>
       <div
-        className="rounded-lg border px-3 py-2 transition-colors"
+        className="relative rounded-lg border px-3 py-2"
         style={{ background: 'var(--surface-raised)', borderColor: 'var(--border)' }}
       >
         <textarea
@@ -32,10 +32,23 @@ export const ChatBox = ({ placeholder, onSubmit, disabled, loading }: ChatBoxPro
           }}
           placeholder={loading ? 'Thinking…' : placeholder}
           disabled={loading}
-          rows={6}
-          className="w-full bg-transparent outline-none resize-none"
+          rows={4}
+          className="w-full bg-transparent outline-none resize-none pr-10" /* pr-10 = room for button */
           style={{ color: 'var(--foreground)', fontSize: 13, lineHeight: 1.5 }}
         />
+        {/* absolute inside the box, bottom-right */}
+        <button
+          onClick={submit}
+          disabled={!text.trim() || loading}
+          className="absolute bottom-2 right-2 w-7 h-7 rounded-md flex items-center justify-center transition-colors"
+          style={{
+            background: text.trim() && !loading ? 'var(--accent)' : 'var(--surface)',
+            color: text.trim() && !loading ? 'var(--background)' : 'var(--foreground-faint)',
+            cursor: text.trim() && !loading ? 'pointer' : 'default',
+          }}
+        >
+          ↑
+        </button>
       </div>
     </div>
   );

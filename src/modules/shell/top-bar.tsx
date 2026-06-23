@@ -1,5 +1,6 @@
 'use client';
 
+import { OpenIcon } from '@/components/open-icon';
 import { InspectTool } from '@/model/execution.model';
 import { useMagent } from '@/providers/magent.provider';
 
@@ -13,6 +14,18 @@ export const TopBar = () => {
     >
       {execution ? (
         <>
+          <button
+            onClick={() => inspectExecution('vscode')}
+            title="Open in VS Code"
+            className="px-2 py-1.5 rounded flex items-center justify-center"
+            style={{
+              background: 'var(--surface-raised)',
+              color: 'var(--foreground-muted)',
+              border: '1px solid var(--border)',
+            }}
+          >
+            <OpenIcon />
+          </button>
           <select
             onChange={(e) => {
               if (e.target.value) {

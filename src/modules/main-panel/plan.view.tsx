@@ -1,9 +1,10 @@
 'use client';
 
+import { ThinkingDots } from '@/components/thinking-dots';
 import { useMagent } from '@/providers/magent.provider';
 
 export const PlanView = () => {
-  const { plan, executing, execution, error, execute } = useMagent();
+  const { plan, discardPlan, execute, execution, executing, error, acting } = useMagent();
 
   if (!plan) return null;
 
@@ -34,19 +35,41 @@ export const PlanView = () => {
 
       {/* Run lives with the plan — execute this proposal */}
       {!execution && (
-        <button
-          onClick={execute}
-          disabled={executing}
-          className="mt-6 px-4 py-2 rounded transition-colors"
-          style={{
-            background: executing ? 'var(--surface-raised)' : 'var(--accent)',
-            color: executing ? 'var(--foreground-faint)' : 'var(--background)',
-            fontSize: 13,
-            cursor: executing ? 'default' : 'pointer',
-          }}
-        >
-          {executing ? 'Running…' : 'Run this'}
-        </button>
+        <>
+          <button
+            onClick={execute}
+            disabled={executing}
+            className="mt-6 px-4 py-2 rounded transition-colors"
+            style={{
+              background: executing ? 'var(--surface-raised)' : 'var(--accent)',
+              color: executing ? 'var(--foreground-faint)' : 'var(--background)',
+              fontSize: 13,
+              cursor: executing ? 'default' : 'pointer',
+            }}
+          >
+            {executing ? (
+              <>
+                Running
+                <ThinkingDots />
+              </>
+            ) : (
+              'Run this'
+            )}
+          </button>
+          <button
+            onClick={() => discardPlan('')}
+            disabled={acting}
+            className="mt-6 ml-2 px-4 py-2 rounded"
+            style={{
+              background: 'transparent',
+              border: '1px solid var(--negative-border)',
+              color: 'var(--negative)',
+              fontSize: 13,
+            }}
+          >
+            Discard
+          </button>
+        </>
       )}
 
       {error && (
