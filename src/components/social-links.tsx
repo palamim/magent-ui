@@ -3,7 +3,7 @@ import { FaGithub, FaXTwitter } from 'react-icons/fa6';
 
 export function SocialLinks() {
   return (
-    <div className="flex items-center justify-between gap-2 h-12 px-4 shrink-0">
+    <div className="flex items-center justify-center gap-2 h-12 px-4 shrink-0">
       <p className="text-sm leading-4" style={{ color: 'var(--foreground)', opacity: 1 }}>
         by <ExternalLink href="https://palamim.com/">Palamim</ExternalLink>
       </p>

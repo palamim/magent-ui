@@ -2,6 +2,7 @@
 
 import { useMagent } from '@/providers/magent.provider';
 import { SettingsPanel } from './settings-panel';
+import { SocialLinks } from '@/components/social-links';
 
 export const Sidebar = () => {
   const { dir, selectProject, plan, files, selectedView, selectView, enterDirector, exitDirector, mode, direction } =
@@ -148,6 +149,13 @@ export const Sidebar = () => {
         </nav>
       )}
       <SettingsPanel />
+      <div
+        style={{
+          background: 'var(--surface-raised)',
+        }}
+      >
+        <SocialLinks />
+      </div>
     </aside>
   );
 };
