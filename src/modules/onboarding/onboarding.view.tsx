@@ -1,6 +1,9 @@
 // modules/onboarding/onboarding-screen.tsx
 'use client';
 
+import { ExternalLink } from '@/components/external-link';
+import { SocialLinks } from '@/components/social-links';
+
 type ConnectionStatus = 'checking' | 'connected' | 'disconnected';
 
 interface OnboardingScreenProps {
@@ -33,14 +36,7 @@ export const OnboardingView = ({ status, onRetry }: OnboardingScreenProps) => {
         <ol className="mt-3 space-y-2" style={{ color: 'var(--foreground-muted)', fontSize: 13, lineHeight: 1.6 }}>
           <li>
             1. Clone the brain repo and add your Anthropic API key:{' '}
-            <a
-              href="https://github.com/palamim/magent"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ color: 'var(--accent)' }}
-            >
-              github.com/palamim/magent
-            </a>
+            <ExternalLink href="https://github.com/palamim/magent">github.com/palamim/magent</ExternalLink>
           </li>
           <li>
             2. Run <code style={{ color: 'var(--foreground)' }}>npm run server</code> — it serves on port 7842.
@@ -74,6 +70,8 @@ export const OnboardingView = ({ status, onRetry }: OnboardingScreenProps) => {
         The brain runs entirely on your machine. Your code never leaves your computer. Magent works on a branch and only
         merges to main when you approve.
       </p>
+
+      <SocialLinks />
     </div>
   );
 };

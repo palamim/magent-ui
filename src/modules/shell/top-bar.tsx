@@ -1,7 +1,8 @@
 'use client';
 
+import { VscVscode } from 'react-icons/vsc';
+
 import { DevBadge } from '@/components/dev-badge';
-import { VSCodeIcon } from '@/components/vs-code-icon';
 import { InspectTool } from '@/model/execution.model';
 import { useMagent } from '@/providers/magent.provider';
 
@@ -21,7 +22,7 @@ export const TopBar = () => {
           <button
             onClick={() => inspectExecution('vscode')}
             title="Open in VS Code"
-            className="px-2 py-1.5 rounded flex items-center justify-center"
+            className="px-2 py-2 rounded flex items-center justify-center"
             style={{
               background: 'var(--surface-raised)',
               color: 'var(--foreground-muted)',
@@ -30,7 +31,7 @@ export const TopBar = () => {
               cursor: 'pointer',
             }}
           >
-            <VSCodeIcon />
+            <VscVscode color="var(--link)" />
           </button>
           <select
             onChange={(e) => {

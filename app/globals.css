@@ -40,6 +40,10 @@
   --diff-remove-text: #fca5a5;
   --diff-hunk: #7a9cc6; /* the @@ lines — muted blue */
   --diff-context: #6a6a72; /* unchanged lines — faint */
+
+  /* ── external links ── */
+  --link: #49a4ff;
+  --link-hover: #0066cc;
 }
 
 @theme inline {
