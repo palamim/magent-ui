@@ -9,6 +9,7 @@ import { DocDiffView } from '@/modules/main-panel/doc-diff.view';
 import { EmptyDirection } from '@/modules/main-panel/empty-direction.view';
 import { ChatBar } from '@/modules/main-panel/chat-bar';
 import { FeatureCompleteView } from '@/modules/main-panel/feature-complete.view';
+import { PlanOverview } from '@/modules/main-panel/plan-overview.view';
 
 export const MainPanel = () => {
   const { selectedView } = useMagent();
@@ -38,6 +39,8 @@ const CurrentView = ({ view }: { view: SelectedView }) => {
       return <DocDiffView name={view.name} />;
     case 'feature-complete':
       return <FeatureCompleteView />;
+    case 'plan-overview':
+      return <PlanOverview />;
 
     default:
       return null;

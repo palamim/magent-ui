@@ -3,10 +3,22 @@
 import { useMagent } from '@/providers/magent.provider';
 import { SettingsPanel } from './settings-panel';
 import { SocialLinks } from '@/components/social-links';
+import { CurrentPlanSummary } from '@/modules/shell/current-plan-summary';
 
 export const Sidebar = () => {
-  const { dir, selectProject, plan, files, selectedView, selectView, enterDirector, exitDirector, mode, direction } =
-    useMagent();
+  const {
+    dir,
+    selectProject,
+    plan,
+    files,
+    selectedView,
+    selectView,
+    enterDirector,
+    exitDirector,
+    mode,
+    direction,
+    taskPlan,
+  } = useMagent();
 
   const projectName = dir ? dir.split('/').filter(Boolean).pop() : null;
 
@@ -107,46 +119,56 @@ export const Sidebar = () => {
       {/* current thread */}
 
       {mode === 'build' && (
-        <nav className="flex-1 overflow-auto py-3">
-          {!plan ? (
-            <p className="px-4" style={{ color: 'var(--foreground-faint)', fontSize: 13 }}>
-              No active Planner thread
-            </p>
-          ) : (
-            <>
-              <SidebarSection label="Plan" />
-              <SidebarItem
-                label={plan.slug}
-                active={selectedView.kind === 'plan'}
-                onClick={() => selectView({ kind: 'plan' })}
-              />
+        <>
+          <CurrentPlanSummary />
+          <nav className="flex-1 overflow-auto py-3">
+            {!taskPlan ? (
+              <p className="px-4" style={{ color: 'var(--foreground-faint)', fontSize: 13 }}>
+                No active Planner thread
+              </p>
+            ) : (
+              <>
+                <SidebarSection label="Feature" />
+                <SidebarItem
+                  label="Overview"
+                  active={selectedView.kind === 'plan-overview'}
+                  onClick={() => selectView({ kind: 'plan-overview' })}
+                />
+                {plan && (
+                  <SidebarItem
+                    label={plan.slug}
+                    active={selectedView.kind === 'plan'}
+                    onClick={() => selectView({ kind: 'plan' })}
+                  />
+                )}
 
-              {files.length > 0 && (
-                <>
-                  {modified.length > 0 && <SidebarSection label="Modified" />}
-                  {modified.map((f) => (
-                    <SidebarItem
-                      key={f.path}
-                      label={fileName(f.path)}
-                      active={selectedView.kind === 'file' && selectedView.path === f.path}
-                      onClick={() => selectView({ kind: 'file', path: f.path })}
-                    />
-                  ))}
+                {files.length > 0 && (
+                  <>
+                    {modified.length > 0 && <SidebarSection label="Modified" />}
+                    {modified.map((f) => (
+                      <SidebarItem
+                        key={f.path}
+                        label={fileName(f.path)}
+                        active={selectedView.kind === 'file' && selectedView.path === f.path}
+                        onClick={() => selectView({ kind: 'file', path: f.path })}
+                      />
+                    ))}
 
-                  {created.length > 0 && <SidebarSection label="Created" />}
-                  {created.map((f) => (
-                    <SidebarItem
-                      key={f.path}
-                      label={fileName(f.path)}
-                      active={selectedView.kind === 'file' && selectedView.path === f.path}
-                      onClick={() => selectView({ kind: 'file', path: f.path })}
-                    />
-                  ))}
-                </>
-              )}
-            </>
-          )}
-        </nav>
+                    {created.length > 0 && <SidebarSection label="Created" />}
+                    {created.map((f) => (
+                      <SidebarItem
+                        key={f.path}
+                        label={fileName(f.path)}
+                        active={selectedView.kind === 'file' && selectedView.path === f.path}
+                        onClick={() => selectView({ kind: 'file', path: f.path })}
+                      />
+                    ))}
+                  </>
+                )}
+              </>
+            )}
+          </nav>
+        </>
       )}
       <SettingsPanel />
       <div

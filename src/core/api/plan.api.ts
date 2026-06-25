@@ -1,5 +1,5 @@
 import { apiClient } from '@/core/api/client';
-import type { Plan } from '@/model/plan.model';
+import type { Plan, TaskPlan } from '@/model/plan.model';
 
 interface PlanTaskResponse {
   plan: Plan;
@@ -30,3 +30,6 @@ export const apiDiscardPlan = (
 
 export const apiRefinePlan = (dir: string, plan: Plan, comment: string): Promise<{ recorded: boolean }> =>
   apiClient.post('/refine-plan', { dir, plan, comment });
+
+export const apiPlanState = (dir: string): Promise<{ plan: TaskPlan | null }> =>
+  apiClient.get(`/plan-state?dir=${encodeURIComponent(dir)}`);

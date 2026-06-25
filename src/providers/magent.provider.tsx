@@ -1,10 +1,17 @@
 'use client';
 
-import { createContext, useContext, useState, type ReactNode } from 'react';
-import { apiPlan, apiApprovePlan, apiDiscardPlan, apiRefinePlan, PlanResponse } from '@/core/api/plan.api';
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import {
+  apiPlan,
+  apiApprovePlan,
+  apiDiscardPlan,
+  apiRefinePlan,
+  PlanResponse,
+  apiPlanState,
+} from '@/core/api/plan.api';
 import { apiExecute, apiInspectExecution, apiApproveExecution, apiDiscardExecution } from '@/core/api/execution.api';
 import { apiDirect, apiApproveDirection, apiDiscardDirection, apiRefineDirection } from '@/core/api/direction.api';
-import type { Plan } from '@/model/plan.model';
+import type { Plan, TaskPlan } from '@/model/plan.model';
 import type { ExecutionResult, InspectTool } from '@/model/execution.model';
 import { DirectionProposal } from '@/model/direction.model';
 import { FileDiff, parseDiff } from '@/lib/parse-diff';
@@ -21,7 +28,8 @@ export type SelectedView =
   | { kind: 'empty-direction' }
   | { kind: 'direction' }
   | { kind: 'doc'; name: string }
-  | { kind: 'feature-complete' };
+  | { kind: 'feature-complete' }
+  | { kind: 'plan-overview' };
 
 interface MagentState {
   dir: string;
@@ -30,6 +38,7 @@ interface MagentState {
   directing: boolean;
   plan: Plan | null;
   planning: boolean;
+  taskPlan: TaskPlan | null;
   execution: ExecutionResult | null;
   executing: boolean;
   executionStatus: 'committed' | 'no-net-changes' | 'gave-up' | null;
@@ -48,6 +57,7 @@ interface MagentActions {
   proposePlan: () => Promise<void>;
   discardPlan: (text: string) => Promise<void>;
   refinePlan: (text: string) => Promise<void>;
+  refreshPlanState: () => Promise<void>;
   direct: () => Promise<void>;
   approveDirection: () => Promise<void>;
   discardDirection: () => Promise<void>;
@@ -80,6 +90,7 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
   const [error, setError] = useState<string | null>(null);
   const [execRefinements, setExecRefinements] = useState<string[]>([]);
   const [featureComplete, setFeatureComplete] = useState<string | null>(null);
+  const [taskPlan, setTaskPlan] = useState<TaskPlan | null>(null);
   const { autoPush } = useAutoPush();
 
   const selectProject = (path: string) => setDir(path);
@@ -168,9 +179,11 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
     setError(null);
     setPlan(null);
     setExecution(null);
+    setExecutionStatus(null);
     setFeatureComplete(null);
     try {
       applyPlanResult(await apiPlan(dir));
+      await refreshPlanState();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Proposal failed');
     } finally {
@@ -200,12 +213,46 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
     try {
       await apiRefinePlan(dir, plan, text);
       applyPlanResult(await apiPlan(dir));
+      await refreshPlanState(); // ← plan.json changed
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Refine failed');
     } finally {
       setPlanning(false);
     }
   };
+
+  const refreshPlanState = async () => {
+    if (!dir) return;
+    try {
+      const { plan } = await apiPlanState(dir);
+      setTaskPlan(plan);
+    } catch {
+      // non-fatal — plan panel just won't update; don't surface an error for this
+    }
+  };
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      if (!dir) {
+        if (active) setTaskPlan(null);
+        return;
+      }
+      try {
+        const { plan } = await apiPlanState(dir);
+        if (!active) return;
+        setTaskPlan(plan);
+        if (plan) {
+          setSelectedView({ kind: 'plan-overview' });
+        }
+      } catch {
+        /* non-fatal */
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [dir]);
 
   const execute = async () => {
     if (!plan) return;
@@ -300,9 +347,9 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
   const resetThread = () => {
     setPlan(null);
     setExecution(null);
-    setExecutionStatus(null);
-    setSelectedView({ kind: 'empty-plan' });
+    setExecutionStatus(null); // ← add
     setFiles([]);
+    setSelectedView(taskPlan ? { kind: 'plan-overview' } : { kind: 'empty-plan' });
   };
 
   const selectView = (view: SelectedView) => setSelectedView(view);
@@ -321,6 +368,8 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
     proposePlan,
     discardPlan,
     refinePlan,
+    refreshPlanState,
+    taskPlan,
     execution,
     executing,
     executionStatus,
