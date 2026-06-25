@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
+import { GoogleAnalytics } from '@next/third-parties/google';
+
 import './globals.css';
 import { AppShell } from '@/modules/shell/app-shell';
 import { MagentProvider } from '@/providers/magent.provider';
@@ -35,6 +37,7 @@ const RootLayout = ({
           </MagentProvider>
         </ConnectionGate>
       </body>
+      <GoogleAnalytics gaId="G-8SNWPLW811" />
     </html>
   );
 };
