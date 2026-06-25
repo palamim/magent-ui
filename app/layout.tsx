@@ -37,7 +37,7 @@ const RootLayout = ({
           </MagentProvider>
         </ConnectionGate>
       </body>
-      <GoogleAnalytics gaId="G-8SNWPLW811" />
+      {process.env.NODE_ENV === 'production' && <GoogleAnalytics gaId="G-XXXXXXXXXX" />}
     </html>
   );
 };
