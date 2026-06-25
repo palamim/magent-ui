@@ -1,9 +1,16 @@
 import { apiClient } from '@/core/api/client';
 import type { Plan } from '@/model/plan.model';
 
-interface PlanResponse {
+interface PlanTaskResponse {
   plan: Plan;
 }
+
+interface FeatureCompleteResponse {
+  status: 'feature-complete';
+  goal: string;
+}
+
+export type PlanResponse = PlanTaskResponse | FeatureCompleteResponse;
 
 export const apiPlan = (dir: string): Promise<PlanResponse> => apiClient.post<PlanResponse>('/plan', { dir });
 

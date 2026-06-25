@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, type ReactNode } from 'react';
-import { apiPlan, apiApprovePlan, apiDiscardPlan, apiRefinePlan } from '@/core/api/plan.api';
+import { apiPlan, apiApprovePlan, apiDiscardPlan, apiRefinePlan, PlanResponse } from '@/core/api/plan.api';
 import { apiExecute, apiInspectExecution, apiApproveExecution, apiDiscardExecution } from '@/core/api/execution.api';
 import { apiDirect, apiApproveDirection, apiDiscardDirection, apiRefineDirection } from '@/core/api/direction.api';
 import type { Plan } from '@/model/plan.model';
@@ -20,7 +20,8 @@ export type SelectedView =
   | { kind: 'file'; path: string }
   | { kind: 'empty-direction' }
   | { kind: 'direction' }
-  | { kind: 'doc'; name: string };
+  | { kind: 'doc'; name: string }
+  | { kind: 'feature-complete' };
 
 interface MagentState {
   dir: string;
@@ -32,6 +33,7 @@ interface MagentState {
   execution: ExecutionResult | null;
   executing: boolean;
   executionStatus: 'committed' | 'no-net-changes' | 'gave-up' | null;
+  featureComplete: string | null;
   selectedView: SelectedView;
   files: FileDiff[];
   acting: boolean;
@@ -77,6 +79,7 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
   const [acting, setActing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [execRefinements, setExecRefinements] = useState<string[]>([]);
+  const [featureComplete, setFeatureComplete] = useState<string | null>(null);
   const { autoPush } = useAutoPush();
 
   const selectProject = (path: string) => setDir(path);
@@ -150,15 +153,24 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const applyPlanResult = (result: PlanResponse) => {
+    if ('status' in result) {
+      setFeatureComplete(result.goal);
+      setSelectedView({ kind: 'feature-complete' });
+    } else {
+      setPlan(result.plan);
+      setSelectedView({ kind: 'plan' });
+    }
+  };
+
   const proposePlan = async () => {
     setPlanning(true);
     setError(null);
     setPlan(null);
     setExecution(null);
+    setFeatureComplete(null);
     try {
-      const { plan } = await apiPlan(dir);
-      setPlan(plan);
-      setSelectedView({ kind: 'plan' });
+      applyPlanResult(await apiPlan(dir));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Proposal failed');
     } finally {
@@ -184,11 +196,10 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
     if (!plan) return;
     setPlanning(true);
     setError(null);
+    setFeatureComplete(null);
     try {
       await apiRefinePlan(dir, plan, text);
-      const { plan: newPlan } = await apiPlan(dir);
-      setPlan(newPlan);
-      setSelectedView({ kind: 'plan' });
+      applyPlanResult(await apiPlan(dir));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Refine failed');
     } finally {
@@ -318,6 +329,7 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
     discardExecution,
     inspectExecution,
     refineExecution,
+    featureComplete,
     selectedView,
     files,
     acting,

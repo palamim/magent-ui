@@ -8,6 +8,7 @@ import { DirectionView } from '@/modules/main-panel/direction.view';
 import { DocDiffView } from '@/modules/main-panel/doc-diff.view';
 import { EmptyDirection } from '@/modules/main-panel/empty-direction.view';
 import { ChatBar } from '@/modules/main-panel/chat-bar';
+import { FeatureCompleteView } from '@/modules/main-panel/feature-complete.view';
 
 export const MainPanel = () => {
   const { selectedView } = useMagent();
@@ -35,6 +36,9 @@ const CurrentView = ({ view }: { view: SelectedView }) => {
       return <FileDiffView path={view.path} />;
     case 'doc':
       return <DocDiffView name={view.name} />;
+    case 'feature-complete':
+      return <FeatureCompleteView />;
+
     default:
       return null;
   }
