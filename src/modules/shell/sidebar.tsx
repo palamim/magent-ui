@@ -263,7 +263,7 @@ const SidebarItem = ({
       className="w-full text-left px-4 py-1.5 truncate transition-colors"
       style={{
         background: active ? 'var(--accent-muted)' : 'transparent',
-        color: active ? 'var(--foreground)' : 'var(--link)',
+        color: 'var(--foreground)',
         fontSize: 13,
         cursor: 'pointer',
       }}

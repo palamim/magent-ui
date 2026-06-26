@@ -10,13 +10,21 @@ import { EmptyDirection } from '@/modules/main-panel/empty-direction.view';
 import { ChatBar } from '@/modules/main-panel/chat-bar';
 import { FeatureCompleteView } from '@/modules/main-panel/feature-complete.view';
 import { PlanOverview } from '@/modules/main-panel/plan-overview.view';
+import { ThinkingView } from '@/modules/main-panel/thinking.view';
 
 export const MainPanel = () => {
-  const { selectedView } = useMagent();
+  const { selectedView, directing, planning, executing } = useMagent();
+
+  const thinking = directing || planning || executing;
+
   return (
     <div className="flex flex-col h-full min-h-0">
       <div className="flex-1 overflow-auto min-h-0">
-        <CurrentView view={selectedView} />
+        {thinking ? (
+          <ThinkingView kind={directing ? 'director' : planning ? 'planner' : 'executor'} />
+        ) : (
+          <CurrentView view={selectedView} />
+        )}
       </div>
       <ChatBar />
     </div>
@@ -41,7 +49,6 @@ const CurrentView = ({ view }: { view: SelectedView }) => {
       return <FeatureCompleteView />;
     case 'plan-overview':
       return <PlanOverview />;
-
     default:
       return null;
   }
