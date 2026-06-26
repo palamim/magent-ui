@@ -153,13 +153,32 @@ export const Sidebar = () => {
                   active={selectedView.kind === 'plan-overview'}
                   onClick={() => selectView({ kind: 'plan-overview' })}
                 />
-                {plan && (
-                  <SidebarItem
-                    label={plan.slug}
-                    active={selectedView.kind === 'plan'}
-                    onClick={() => selectView({ kind: 'plan' })}
-                  />
+                {taskPlan.dependencies?.length > 0 && (
+                  <div
+                    className="mx-3 my-2 rounded px-3 py-2"
+                    style={{ background: 'var(--running-bg)', border: '1px solid var(--running)' }}
+                  >
+                    <p style={{ fontSize: 11, color: 'var(--foreground-muted)' }}>
+                      <strong style={{ color: 'var(--foreground)' }}>Installs:</strong>{' '}
+                      {taskPlan.dependencies.join(', ')}
+                      <span style={{ color: 'var(--foreground-faint)' }}>
+                        {' '}
+                        — added automatically when you run this plan.
+                      </span>
+                    </p>
+                  </div>
                 )}
+                {plan &&
+                  taskPlan &&
+                  taskPlan.tasks.map((task) => (
+                    <SidebarItem
+                      key={task.id}
+                      label={`${task.id}: ${task.slug}`}
+                      active={selectedView.kind === 'plan'}
+                      onClick={() => selectView({ kind: 'plan' })}
+                      disabled={plan.taskId !== task.id}
+                    />
+                  ))}
 
                 {files.length > 0 && (
                   <>
@@ -210,18 +229,48 @@ const SidebarSection = ({ label }: { label: string }) => (
   </p>
 );
 
-const SidebarItem = ({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) => (
-  <button
-    onClick={onClick}
-    className="w-full text-left px-4 py-1.5 truncate transition-colors"
-    style={{
-      background: active ? 'var(--accent-muted)' : 'transparent',
-      color: active ? 'var(--foreground)' : 'var(--foreground-muted)',
-      fontSize: 13,
-    }}
-  >
-    {label}
-  </button>
-);
+const SidebarItem = ({
+  label,
+  active,
+  onClick,
+  disabled = false,
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+  disabled?: boolean;
+}) => {
+  if (disabled)
+    return (
+      <button
+        onClick={onClick}
+        className="w-full text-left px-4 py-1.5 truncate transition-colors"
+        style={{
+          background: 'transparent',
+          color: 'var(--foreground-muted)',
+          opacity: 0.6,
+          fontSize: 12,
+          display: 'inline',
+        }}
+        disabled={disabled}
+      >
+        {label}
+      </button>
+    );
+  return (
+    <button
+      onClick={onClick}
+      className="w-full text-left px-4 py-1.5 truncate transition-colors"
+      style={{
+        background: active ? 'var(--accent-muted)' : 'transparent',
+        color: active ? 'var(--foreground)' : 'var(--link)',
+        fontSize: 13,
+        cursor: 'pointer',
+      }}
+    >
+      {label}
+    </button>
+  );
+};
 
 const fileName = (path: string) => path.split('/').pop() ?? path;

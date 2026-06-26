@@ -33,6 +33,19 @@ export const PlanOverview = () => {
         Task status reflects the last plan check — it updates when you continue the feature, not live as work happens.
       </p>
 
+      {/* dependencies */}
+      {taskPlan.dependencies?.length > 0 && (
+        <div
+          className="mt-4 rounded px-3 py-2"
+          style={{ background: 'var(--running-bg)', border: '1px solid var(--running)' }}
+        >
+          <p style={{ fontSize: 11, color: 'var(--foreground-muted)' }}>
+            <strong style={{ color: 'var(--foreground)' }}>Installs:</strong> {taskPlan.dependencies.join(', ')}
+            <span style={{ color: 'var(--foreground-faint)' }}> — added automatically when you run this plan.</span>
+          </p>
+        </div>
+      )}
+
       {/* task list */}
       <div className="mt-6 flex flex-col gap-1">
         {taskPlan.tasks.map((task) => (
