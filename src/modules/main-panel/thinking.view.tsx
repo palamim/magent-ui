@@ -26,6 +26,12 @@ const LABELS: Record<ThinkingKind, string> = {
   executor: 'Building',
 };
 
+const TIMES: Record<ThinkingKind, string> = {
+  director: 'Director usually takes 2–3 minutes',
+  planner: 'Planner usually takes under a minute',
+  executor: 'Executor usually takes under a minute',
+};
+
 interface ThinkingViewProps {
   kind: ThinkingKind;
 }
@@ -61,6 +67,12 @@ export const ThinkingView = ({ kind }: ThinkingViewProps) => {
           style={{ fontSize: 13, color: 'var(--foreground-muted)', minHeight: 20 }}
         >
           {phrases[phraseIdx]}
+        </p>
+      </div>
+
+      <div className="text-center">
+        <p className="mt-2" style={{ fontSize: 11, color: 'var(--foreground-faint)' }}>
+          {TIMES[kind]}
         </p>
       </div>
 
