@@ -29,15 +29,9 @@ export const PlanOverview = () => {
       <p className="mt-2" style={{ fontSize: 12, color: 'var(--foreground-muted)', lineHeight: 1.5 }}>
         {taskPlan.frontier}
       </p>
-      <div
-        className="flex items-center gap-2 mt-3 px-3 py-2 rounded"
-        style={{ background: 'var(--running-bg)', border: '1px solid var(--running)' }}
-      >
-        <span style={{ color: 'var(--running)', fontSize: 13 }}>⚠</span>
-        <p style={{ fontSize: 12, color: 'var(--foreground)', lineHeight: 1.4 }}>
-          Task status reflects the last plan check — it updates when you continue the feature, not live as work happens.
-        </p>
-      </div>
+      <p className="mt-3" style={{ fontSize: 11, color: 'var(--foreground-faint)', lineHeight: 1.5 }}>
+        Task status reflects the last plan check — it updates when you continue the feature, not live as work happens.
+      </p>
 
       {/* task list */}
       <div className="mt-6 flex flex-col gap-1">

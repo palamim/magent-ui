@@ -1,9 +1,14 @@
 'use client';
 
+import { useState } from 'react';
+import { FaFolder, FaFolderOpen } from 'react-icons/fa6';
+
 import { useMagent } from '@/providers/magent.provider';
 import { SettingsPanel } from './settings-panel';
 import { SocialLinks } from '@/components/social-links';
 import { CurrentPlanSummary } from '@/modules/shell/current-plan-summary';
+import { FolderPicker } from '@/modules/shell/folder-picker';
+import { DirectionNudge } from './direction-nudge';
 
 export const Sidebar = () => {
   const {
@@ -19,8 +24,7 @@ export const Sidebar = () => {
     direction,
     taskPlan,
   } = useMagent();
-
-  const projectName = dir ? dir.split('/').filter(Boolean).pop() : null;
+  const [picking, setPicking] = useState(false);
 
   const modified = files.filter((f) => f.status === 'modified');
   const created = files.filter((f) => f.status === 'created');
@@ -31,28 +35,41 @@ export const Sidebar = () => {
       style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
     >
       {/* project selector */}
-      <div className="flex items-center h-12 px-4 border-b shrink-0" style={{ borderColor: 'var(--border)' }}>
-        <input
-          value={dir}
-          onChange={(e) => selectProject(e.target.value)}
-          placeholder="Project path…"
-          className="w-full bg-transparent outline-none"
-          style={{ color: 'var(--foreground)', fontSize: 13 }}
-        />
+      <div className="px-3 py-3 border-b shrink-0" style={{ borderColor: 'var(--border)' }}>
+        {!dir ? (
+          <button
+            onClick={() => setPicking(true)}
+            className="w-full flex items-center gap-2 px-3 py-2 rounded transition-colors"
+            style={{
+              background: 'var(--accent)',
+              color: 'var(--background)',
+              fontSize: 13,
+              fontWeight: 500,
+              cursor: 'pointer',
+            }}
+          >
+            <FaFolderOpen size={14} />
+            Choose a project folder
+          </button>
+        ) : (
+          <div className="flex items-center gap-2">
+            <FaFolder size={14} style={{ color: 'var(--foreground-muted)', flexShrink: 0 }} />
+            <span className="flex-1 truncate" style={{ color: 'var(--foreground)', fontSize: 13, fontWeight: 500 }}>
+              {dir.split('/').filter(Boolean).pop()}
+            </span>
+            <button
+              onClick={() => setPicking(true)}
+              className="shrink-0 px-2 py-1 rounded transition-colors"
+              style={{ color: 'var(--foreground-muted)', fontSize: 11, background: 'var(--surface-raised)' }}
+              title="Change project folder"
+            >
+              Change
+            </button>
+          </div>
+        )}
       </div>
-      {projectName && (
-        <span
-          className="px-2 py-0.5 rounded shrink-0"
-          style={{
-            background: projectName.includes('target') ? 'var(--running)' : 'var(--surface-raised)',
-            color: projectName.includes('target') ? 'var(--background)' : 'var(--foreground-muted)',
-            fontSize: 10,
-            fontWeight: 700,
-          }}
-        >
-          {projectName}
-        </span>
-      )}
+
+      {picking && <FolderPicker onSelect={(path) => selectProject(path)} onClose={() => setPicking(false)} />}
 
       {/* mode selector */}
       <div className="px-3 pt-3 pb-1 shrink-0">
@@ -88,6 +105,8 @@ export const Sidebar = () => {
           </button>
         </div>
       </div>
+
+      <DirectionNudge />
 
       {mode === 'direct' && (
         <nav className="flex-1 overflow-auto py-3">

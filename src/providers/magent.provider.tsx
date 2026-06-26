@@ -17,6 +17,7 @@ import { DirectionProposal } from '@/model/direction.model';
 import { FileDiff, parseDiff } from '@/lib/parse-diff';
 import { usePersistedString } from '@/hooks/user-persisted-state.hook';
 import { useAutoPush } from '@/hooks/use-auto-push.hook';
+import { apiProjectStatus, apiSetupProject } from '@/core/api/project-setup.api';
 
 type Mode = 'build' | 'direct';
 
@@ -47,6 +48,8 @@ interface MagentState {
   files: FileDiff[];
   acting: boolean;
   error: string | null;
+  needsGitSetup: boolean;
+  hasRealDirection: boolean;
 }
 
 interface MagentActions {
@@ -67,6 +70,8 @@ interface MagentActions {
   approveExecution: () => Promise<void>;
   discardExecution: () => Promise<void>;
   refineExecution: (text: string) => Promise<void>;
+  confirmGitSetup: () => Promise<void>;
+  cancelGitSetup: () => void;
   executionStatus: 'committed' | 'no-net-changes' | 'gave-up' | null;
 }
 
@@ -91,6 +96,9 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
   const [execRefinements, setExecRefinements] = useState<string[]>([]);
   const [featureComplete, setFeatureComplete] = useState<string | null>(null);
   const [taskPlan, setTaskPlan] = useState<TaskPlan | null>(null);
+  const [needsGitSetup, setNeedsGitSetup] = useState(false);
+  const [pendingAction, setPendingAction] = useState<'propose' | 'direct' | null>(null);
+  const [hasRealDirection, setHasRealDirection] = useState(false);
   const { autoPush } = useAutoPush();
 
   const selectProject = (path: string) => setDir(path);
@@ -107,7 +115,7 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
     setSelectedView({ kind: 'empty-plan' });
   };
 
-  const direct = async () => {
+  const runDirect = async () => {
     setDirecting(true);
     setError(null);
     setDirection(null);
@@ -122,11 +130,21 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const direct = async () => {
+    if (!dir) return;
+    if (await needsSetup()) {
+      setPendingAction('direct');
+      return;
+    }
+    await runDirect();
+  };
+
   const approveDirection = async () => {
     if (!direction) return;
     setActing(true);
     try {
       await apiApproveDirection(dir, direction.rationale, direction.direction, direction.conventions, [], '');
+      setHasRealDirection(true);
       exitDirector();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Approve failed');
@@ -164,6 +182,20 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const needsSetup = async (): Promise<boolean> => {
+    if (!dir) return false;
+    try {
+      const { needsGitignoreSetup } = await apiProjectStatus(dir);
+      if (needsGitignoreSetup) {
+        setNeedsGitSetup(true);
+        return true;
+      }
+    } catch {
+      // status check failed — let the run proceed and hit the normal precondition error
+    }
+    return false;
+  };
+
   const applyPlanResult = (result: PlanResponse) => {
     if ('status' in result) {
       setFeatureComplete(result.goal);
@@ -174,7 +206,7 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const proposePlan = async () => {
+  const runProposePlan = async () => {
     setPlanning(true);
     setError(null);
     setPlan(null);
@@ -189,6 +221,28 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setPlanning(false);
     }
+  };
+
+  const proposePlan = async () => {
+    if (!dir) return;
+    if (await needsSetup()) {
+      setPendingAction('propose');
+      return;
+    }
+    await runProposePlan();
+  };
+
+  const confirmGitSetup = async () => {
+    await apiSetupProject(dir);
+    setNeedsGitSetup(false);
+    if (pendingAction === 'propose') await runProposePlan();
+    else if (pendingAction === 'direct') await runDirect();
+    setPendingAction(null);
+  };
+
+  const cancelGitSetup = () => {
+    setNeedsGitSetup(false);
+    setPendingAction(null);
   };
 
   const discardPlan = async (comment: string) => {
@@ -235,16 +289,18 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
     let active = true;
     (async () => {
       if (!dir) {
-        if (active) setTaskPlan(null);
+        if (active) {
+          setTaskPlan(null);
+          setHasRealDirection(false);
+        }
         return;
       }
       try {
-        const { plan } = await apiPlanState(dir);
+        const [{ plan }, status] = await Promise.all([apiPlanState(dir), apiProjectStatus(dir)]);
         if (!active) return;
         setTaskPlan(plan);
-        if (plan) {
-          setSelectedView({ kind: 'plan-overview' });
-        }
+        setHasRealDirection(status.hasRealDirection);
+        if (plan) setSelectedView({ kind: 'plan-overview' });
       } catch {
         /* non-fatal */
       }
@@ -387,6 +443,10 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
     exitDirector,
     selectProject,
     selectView,
+    needsGitSetup,
+    confirmGitSetup,
+    cancelGitSetup,
+    hasRealDirection,
   };
 
   return <MagentContext.Provider value={value}>{children}</MagentContext.Provider>;
