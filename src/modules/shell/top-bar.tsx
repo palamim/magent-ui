@@ -7,7 +7,7 @@ import { InspectTool } from '@/model/execution.model';
 import { useMagent } from '@/providers/magent.provider';
 
 export const TopBar = () => {
-  const { execution, acting, approveExecution, discardExecution, inspectExecution } = useMagent();
+  const { execution, acting, keepExecution, discardExecution, inspectExecution } = useMagent();
 
   return (
     <header
@@ -59,7 +59,7 @@ export const TopBar = () => {
             <option value="ghostty">Ghostty</option>
           </select>
           <button
-            onClick={discardExecution}
+            onClick={() => discardExecution()}
             disabled={acting}
             className="px-3 py-1.5 rounded transition-colors"
             style={{
@@ -70,11 +70,12 @@ export const TopBar = () => {
               cursor: acting ? 'default' : 'pointer',
               opacity: acting ? 0.5 : 1,
             }}
+            title="Undo this commit, stay on the branch"
           >
             Discard
           </button>
           <button
-            onClick={approveExecution}
+            onClick={() => keepExecution()}
             disabled={acting}
             className="px-3 py-1.5 rounded transition-colors"
             style={{
@@ -84,8 +85,9 @@ export const TopBar = () => {
               fontWeight: 500,
               cursor: acting ? 'default' : 'pointer',
             }}
+            title="Keep this commit on the branch"
           >
-            {acting ? 'Working…' : 'Approve'}
+            {acting ? 'Working…' : 'Keep'}
           </button>
         </div>
       ) : (

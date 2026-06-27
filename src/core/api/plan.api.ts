@@ -1,35 +1,21 @@
 import { apiClient } from '@/core/api/client';
-import type { Plan, TaskPlan } from '@/model/plan.model';
+import type { Plan } from '@/model/plan.model';
 
-interface PlanTaskResponse {
-  plan: Plan;
-}
-
-interface FeatureCompleteResponse {
-  status: 'feature-complete';
-  goal: string;
-}
-
-export type PlanResponse = PlanTaskResponse | FeatureCompleteResponse;
+export type PlanResponse = { kind: 'task' } | { kind: 'feature-complete'; goal: string };
 
 export const apiPlan = (dir: string): Promise<PlanResponse> => apiClient.post<PlanResponse>('/plan', { dir });
-
-export const apiApprovePlan = (
-  dir: string,
-  plan: Plan,
-  refinements: string[] = [],
-  comment: string = '',
-): Promise<{ recorded: boolean }> => apiClient.post('/approve-plan', { dir, plan, refinements, comment });
-
-export const apiDiscardPlan = (
-  dir: string,
-  plan: Plan,
-  refinements: string[] = [],
-  comment: string = '',
-): Promise<{ recorded: boolean }> => apiClient.post('/discard-plan', { dir, plan, refinements, comment });
 
 export const apiRefinePlan = (dir: string, plan: Plan, comment: string): Promise<{ recorded: boolean }> =>
   apiClient.post('/refine-plan', { dir, plan, comment });
 
-export const apiPlanState = (dir: string): Promise<{ plan: TaskPlan | null }> =>
+export const apiPlanState = (dir: string): Promise<{ plan: Plan | null }> =>
   apiClient.get(`/plan-state?dir=${encodeURIComponent(dir)}`);
+
+export const apiFinishPlan = (
+  dir: string,
+  push: boolean,
+  comment = '',
+): Promise<{ merged: boolean; pushed: boolean }> => apiClient.post('/finish-plan', { dir, push, comment });
+
+export const apiAbandonPlan = (dir: string, comment = ''): Promise<{ abandoned: boolean }> =>
+  apiClient.post('/abandon-plan', { dir, comment });

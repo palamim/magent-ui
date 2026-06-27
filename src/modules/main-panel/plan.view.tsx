@@ -1,130 +1,164 @@
 'use client';
 
-import { ThinkingDots } from '@/components/thinking-dots';
 import { useMagent } from '@/providers/magent.provider';
+import type { Task } from '@/model/plan.model';
 
 export const PlanView = () => {
-  const { plan, discardPlan, execute, execution, executing, error, acting, executionStatus } = useMagent();
+  const { plan, task, executing, replanning, selectView, finishPlan, abandonPlan, acting } = useMagent();
 
-  if (!plan) return null;
+  if (!plan) {
+    return (
+      <div
+        className="flex items-center justify-center h-full"
+        style={{ color: 'var(--foreground-faint)', fontSize: 13 }}
+      >
+        No active plan.
+      </div>
+    );
+  }
+
+  const done = plan.tasks.filter((t) => t.status === 'done').length;
+  const total = plan.tasks.length;
+  const allDone = done === total;
 
   return (
-    <div className="p-8" style={{ maxWidth: 760 }}>
-      <p
-        className="uppercase tracking-wide"
-        style={{ color: 'var(--foreground-faint)', fontSize: 11, fontWeight: 600 }}
-      >
-        {plan.type}
-      </p>
-      <h2 className="mt-1" style={{ fontSize: 18, fontWeight: 600 }}>
-        {plan.description}
-      </h2>
+    <div className="h-full overflow-auto px-8 py-6" style={{ position: 'relative' }}>
+      {/* quiet "updating" overlay during background replan */}
+      {replanning && <ReplanningOverlay />}
 
-      <pre
-        className="mt-5 whitespace-pre-wrap"
-        style={{ color: 'var(--foreground-muted)', fontSize: 13, lineHeight: 1.6 }}
-      >
-        {plan.instructions}
-      </pre>
-
-      {plan.targetFiles.length > 0 && (
-        <p className="mt-5" style={{ color: 'var(--foreground-faint)', fontSize: 12 }}>
-          Target files: {plan.targetFiles.map((f) => f.split('/').pop()).join(', ')}
+      <div style={{ opacity: replanning ? 0.4 : 1, transition: 'opacity 0.2s' }}>
+        {/* header */}
+        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.05em', color: 'var(--foreground-faint)' }}>
+          CURRENT FEATURE
+        </div>
+        <h2 className="mt-1" style={{ fontSize: 18, fontWeight: 600, color: 'var(--foreground)', lineHeight: 1.3 }}>
+          {plan.goal}
+        </h2>
+        <p className="mt-2" style={{ fontSize: 12, color: 'var(--foreground-muted)', lineHeight: 1.5 }}>
+          {plan.frontier}
         </p>
-      )}
 
-      {/* Run lives with the plan — execute this proposal */}
-      {!execution && !executionStatus && (
-        <>
-          <button
-            onClick={execute}
-            disabled={executing}
-            className="mt-6 px-4 py-2 rounded transition-colors"
-            style={{
-              background: executing ? 'var(--surface-raised)' : 'var(--accent)',
-              color: executing ? 'var(--foreground-faint)' : 'var(--background)',
-              fontSize: 13,
-              cursor: executing ? 'default' : 'pointer',
-            }}
+        {/* dependencies */}
+        {plan.dependencies?.length > 0 && (
+          <div
+            className="mt-4 rounded px-3 py-2"
+            style={{ background: 'var(--running-bg)', border: '1px solid var(--running)' }}
           >
-            {executing ? (
-              <>
-                Running
-                <ThinkingDots />
-              </>
-            ) : (
-              'Run this'
-            )}
+            <p style={{ fontSize: 11, color: 'var(--foreground-muted)' }}>
+              <strong style={{ color: 'var(--foreground)' }}>Installs:</strong> {plan.dependencies.join(', ')}
+              <span style={{ color: 'var(--foreground-faint)' }}> — added automatically when you run this plan.</span>
+            </p>
+          </div>
+        )}
+
+        {/* task list */}
+        <div className="mt-6 flex flex-col gap-1">
+          {plan.tasks.map((t) => (
+            <TaskRow
+              key={t.id}
+              task={t}
+              isNext={task?.id === t.id} // the runnable next task (from task.json)
+              running={executing && task?.id === t.id} // running = the next task, while executing
+              onRun={task?.id === t.id ? () => selectView({ kind: 'task' }) : undefined}
+            />
+          ))}
+        </div>
+
+        {/* plan-level actions */}
+        <div className="mt-8 flex items-center gap-3 border-t pt-5" style={{ borderColor: 'var(--border)' }}>
+          <button
+            onClick={() => finishPlan()}
+            disabled={acting || replanning}
+            className="px-4 py-2 rounded transition-colors"
+            style={{
+              background: allDone ? 'var(--positive)' : 'var(--surface-raised)',
+              color: allDone ? 'var(--background)' : 'var(--foreground)',
+              border: allDone ? 'none' : '1px solid var(--border)',
+              fontSize: 13,
+              fontWeight: 500,
+              cursor: acting ? 'default' : 'pointer',
+            }}
+            title={allDone ? 'Merge this feature to main' : 'Merge now, even though tasks remain'}
+          >
+            {allDone ? 'Finish & merge' : 'Merge now'}
           </button>
-          {!executing && (
-            <button
-              onClick={() => discardPlan('')}
-              disabled={acting}
-              className="mt-6 ml-2 px-4 py-2 rounded"
-              style={{
-                background: 'transparent',
-                border: '1px solid var(--negative-border)',
-                color: 'var(--negative)',
-                fontSize: 13,
-              }}
-            >
-              Discard
-            </button>
+
+          {!allDone && (
+            <span style={{ fontSize: 11, color: 'var(--foreground-faint)' }}>
+              {done}/{total} done — merging now ships what&apos;s complete.
+            </span>
           )}
-        </>
-      )}
 
-      {executionStatus === 'no-net-changes' && (
-        <div className="mt-6">
-          <p style={{ color: 'var(--foreground-muted)', fontSize: 13, textAlign: 'center' }}>
-            The agent ran but found nothing to change — try refining the plan
-          </p>
-          <div className="flex justify-center gap-2 mt-4">
-            <button
-              onClick={() => discardPlan('')}
-              disabled={acting}
-              className="px-4 py-2 rounded"
-              style={{
-                background: 'transparent',
-                border: '1px solid var(--negative-border)',
-                color: 'var(--negative)',
-                fontSize: 13,
-              }}
-            >
-              Discard
-            </button>
-          </div>
+          <button
+            onClick={() => abandonPlan()}
+            disabled={acting || replanning}
+            className="ml-auto px-4 py-2 rounded transition-colors"
+            style={{
+              background: 'transparent',
+              border: '1px solid var(--negative-border)',
+              color: 'var(--negative)',
+              fontSize: 13,
+              cursor: acting ? 'default' : 'pointer',
+            }}
+            title="Throw away this whole feature branch"
+          >
+            Abandon
+          </button>
         </div>
-      )}
+      </div>
+    </div>
+  );
+};
 
-      {executionStatus === 'gave-up' && (
-        <div className="mt-6">
-          <p style={{ color: 'var(--foreground-muted)', fontSize: 13, textAlign: 'center' }}>
-            The agent gave up — try refining the plan or check the project path.
-          </p>
-          <div className="flex justify-center gap-2 mt-4">
-            <button
-              onClick={() => discardPlan('')}
-              disabled={acting}
-              className="px-4 py-2 rounded"
-              style={{
-                background: 'transparent',
-                border: '1px solid var(--negative-border)',
-                color: 'var(--negative)',
-                fontSize: 13,
-              }}
-            >
-              Discard
-            </button>
-          </div>
+const ReplanningOverlay = () => (
+  <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
+    <div
+      className="flex items-center gap-2 px-4 py-2 rounded-full"
+      style={{ background: 'var(--surface-raised)', border: '1px solid var(--running)' }}
+    >
+      <span
+        className="inline-block rounded-full animate-ping"
+        style={{ width: 8, height: 8, background: 'var(--running)' }}
+      />
+      <span style={{ fontSize: 12, color: 'var(--foreground)' }}>Updating the plan…</span>
+    </div>
+  </div>
+);
+
+const TaskRow = ({
+  task,
+  isNext,
+  running,
+  onRun,
+}: {
+  task: Task;
+  isNext?: boolean;
+  running?: boolean;
+  onRun?: () => void;
+}) => {
+  const done = task.status === 'done';
+  const icon = done ? '✓' : running ? '→' : '○';
+  const iconColor = done ? 'var(--positive)' : running ? 'var(--running)' : 'var(--foreground-faint)';
+
+  return (
+    <div
+      onClick={onRun}
+      className="flex items-start gap-3 px-3 py-2.5 rounded transition-colors"
+      style={{
+        background: running ? 'var(--running-bg)' : isNext ? 'var(--accent-muted)' : 'transparent',
+        border: running ? '1px solid var(--running)' : isNext ? '1px solid var(--accent)' : '1px solid transparent',
+        cursor: onRun ? 'pointer' : 'default',
+      }}
+    >
+      <span style={{ color: iconColor, fontSize: 14, lineHeight: 1.4, width: 16 }}>{icon}</span>
+      <div className="flex-1 min-w-0">
+        <div style={{ fontSize: 13, color: done ? 'var(--foreground-muted)' : 'var(--foreground)', fontWeight: 500 }}>
+          {task.slug} {isNext && !running && <span style={{ color: 'var(--accent)', fontSize: 11 }}>· next</span>}
         </div>
-      )}
-
-      {error && (
-        <p className="mt-4" style={{ color: 'var(--negative)', fontSize: 13 }}>
-          {error}
-        </p>
-      )}
+        <div className="mt-0.5" style={{ fontSize: 12, color: 'var(--foreground-muted)', lineHeight: 1.45 }}>
+          {task.description}
+        </div>
+      </div>
     </div>
   );
 };

@@ -1,7 +1,7 @@
 'use client';
 
 import { SelectedView, useMagent } from '@/providers/magent.provider';
-import { PlanView } from '@/modules/main-panel/plan.view';
+import { TaskView } from '@/modules/main-panel/task.view';
 import { FileDiffView } from '@/modules/main-panel/file-diff.view';
 import { EmptyPlan } from '@/modules/main-panel/empty-plan.view';
 import { DirectionView } from '@/modules/main-panel/direction.view';
@@ -9,7 +9,7 @@ import { DocDiffView } from '@/modules/main-panel/doc-diff.view';
 import { EmptyDirection } from '@/modules/main-panel/empty-direction.view';
 import { ChatBar } from '@/modules/main-panel/chat-bar';
 import { FeatureCompleteView } from '@/modules/main-panel/feature-complete.view';
-import { PlanOverview } from '@/modules/main-panel/plan-overview.view';
+import { PlanView } from '@/modules/main-panel/plan.view';
 import { ThinkingView } from '@/modules/main-panel/thinking.view';
 
 export const MainPanel = () => {
@@ -35,10 +35,12 @@ const CurrentView = ({ view }: { view: SelectedView }) => {
   switch (view.kind) {
     case 'empty-plan':
       return <EmptyPlan />;
-    case 'empty-direction':
-      return <EmptyDirection />;
     case 'plan':
       return <PlanView />;
+    case 'empty-direction':
+      return <EmptyDirection />;
+    case 'task':
+      return <TaskView />;
     case 'direction':
       return <DirectionView />;
     case 'file':
@@ -47,8 +49,6 @@ const CurrentView = ({ view }: { view: SelectedView }) => {
       return <DocDiffView name={view.name} />;
     case 'feature-complete':
       return <FeatureCompleteView />;
-    case 'plan-overview':
-      return <PlanOverview />;
     default:
       return null;
   }

@@ -9,6 +9,7 @@ export const ChatBar = () => {
     execution,
     directing,
     planning,
+    replanning,
     executing,
     refineDirection,
     refinePlan,
@@ -18,7 +19,7 @@ export const ChatBar = () => {
   if (mode === 'direct' && direction)
     return <ChatBox placeholder="Refine this direction…" onSubmit={refineDirection} loading={directing} />;
   if (mode === 'build' && plan && !execution)
-    return <ChatBox placeholder="Refine this plan…" onSubmit={refinePlan} loading={planning} />;
+    return <ChatBox placeholder="Refine this plan…" onSubmit={refinePlan} loading={planning || replanning} />;
   if (mode === 'build' && execution)
     return <ChatBox placeholder="Refine this code…" onSubmit={refineExecution} loading={executing} />;
   return null;

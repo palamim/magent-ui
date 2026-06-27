@@ -6,7 +6,6 @@ import { FaFolder, FaFolderOpen } from 'react-icons/fa6';
 import { useMagent } from '@/providers/magent.provider';
 import { SettingsPanel } from './settings-panel';
 import { SocialLinks } from '@/components/social-links';
-import { CurrentPlanSummary } from '@/modules/shell/current-plan-summary';
 import { FolderPicker } from '@/modules/shell/folder-picker';
 import { DirectionNudge } from './direction-nudge';
 
@@ -14,7 +13,7 @@ export const Sidebar = () => {
   const {
     dir,
     selectProject,
-    plan,
+    task,
     files,
     selectedView,
     selectView,
@@ -22,7 +21,7 @@ export const Sidebar = () => {
     exitDirector,
     mode,
     direction,
-    taskPlan,
+    plan,
   } = useMagent();
   const [picking, setPicking] = useState(false);
 
@@ -139,46 +138,42 @@ export const Sidebar = () => {
 
       {mode === 'build' && (
         <>
-          <CurrentPlanSummary />
           <nav className="flex-1 overflow-auto py-3">
-            {!taskPlan ? (
+            {!plan ? (
               <p className="px-4" style={{ color: 'var(--foreground-faint)', fontSize: 13 }}>
                 No active Planner thread
               </p>
             ) : (
               <>
-                <SidebarSection label="Feature" />
-                <SidebarItem
-                  label="Overview"
-                  active={selectedView.kind === 'plan-overview'}
-                  onClick={() => selectView({ kind: 'plan-overview' })}
-                />
-                {taskPlan.dependencies?.length > 0 && (
+                <SidebarSection label="Current Feature" />
+                <div className="w-full text-left px-4 pb-2">
                   <div
-                    className="mx-3 my-2 rounded px-3 py-2"
-                    style={{ background: 'var(--running-bg)', border: '1px solid var(--running)' }}
+                    className="mt-1 line-clamp-2"
+                    style={{ fontSize: 12, color: 'var(--foreground-muted)', lineHeight: 1.4 }}
                   >
-                    <p style={{ fontSize: 11, color: 'var(--foreground-muted)' }}>
-                      <strong style={{ color: 'var(--foreground)' }}>Installs:</strong>{' '}
-                      {taskPlan.dependencies.join(', ')}
-                      <span style={{ color: 'var(--foreground-faint)' }}>
-                        {' '}
-                        — added automatically when you run this plan.
-                      </span>
-                    </p>
+                    {plan.goal}
                   </div>
-                )}
-                {plan &&
-                  taskPlan &&
-                  taskPlan.tasks.map((task) => (
-                    <SidebarItem
-                      key={task.id}
-                      label={`${task.id}: ${task.slug}`}
-                      active={selectedView.kind === 'plan'}
-                      onClick={() => selectView({ kind: 'plan' })}
-                      disabled={plan.taskId !== task.id}
+                </div>
+                <SidebarItem
+                  label="→ Overview"
+                  active={selectedView.kind === 'plan'}
+                  onClick={() => selectView({ kind: 'plan' })}
+                />
+                <SidebarSection label="Tasks" />
+                {plan.tasks.map((t) => {
+                  const isNext = task?.id === t.id;
+                  const done = t.status === 'done';
+                  return (
+                    <SidebarTaskItem
+                      key={t.id}
+                      label={`${t.id}. ${t.slug}`}
+                      done={done}
+                      isNext={isNext}
+                      active={isNext && selectedView.kind === 'task'}
+                      onClick={isNext ? () => selectView({ kind: 'task' }) : undefined} // only the next task is runnable
                     />
-                  ))}
+                  );
+                })}
 
                 {files.length > 0 && (
                   <>
@@ -269,6 +264,43 @@ const SidebarItem = ({
       }}
     >
       {label}
+    </button>
+  );
+};
+
+const SidebarTaskItem = ({
+  label,
+  done,
+  isNext,
+  active,
+  onClick,
+}: {
+  label: string;
+  done: boolean;
+  isNext: boolean;
+  active: boolean;
+  onClick?: () => void;
+}) => {
+  const icon = done ? '✓' : isNext ? '→' : '○';
+  const iconColor = done ? 'var(--positive)' : isNext ? 'var(--accent)' : 'var(--foreground-faint)';
+  const clickable = !!onClick;
+
+  return (
+    <button
+      onClick={onClick}
+      disabled={!clickable}
+      className="w-full text-left px-4 py-1.5 truncate transition-colors flex items-center gap-2"
+      style={{
+        background: active ? 'var(--accent-muted)' : 'transparent',
+        color: done ? 'var(--foreground-muted)' : 'var(--foreground)',
+        fontSize: 13,
+        cursor: clickable ? 'pointer' : 'default',
+        opacity: clickable || done ? 1 : 0.55, // pending-but-not-next is dimmed
+      }}
+    >
+      <span style={{ color: iconColor, width: 14, fontSize: 13 }}>{icon}</span>
+      <span className="truncate">{label}</span>
+      {isNext && <span style={{ color: 'var(--accent)', fontSize: 10, marginLeft: 'auto' }}>next</span>}
     </button>
   );
 };
