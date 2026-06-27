@@ -11,6 +11,7 @@ import { ChatBar } from '@/modules/main-panel/chat-bar';
 import { FeatureCompleteView } from '@/modules/main-panel/feature-complete.view';
 import { PlanView } from '@/modules/main-panel/plan.view';
 import { ThinkingView } from '@/modules/main-panel/thinking.view';
+import { CommentBar } from '@/modules/main-panel/comment-bar';
 
 export const MainPanel = () => {
   const { selectedView, directing, planning, executing } = useMagent();
@@ -26,6 +27,7 @@ export const MainPanel = () => {
           <CurrentView view={selectedView} />
         )}
       </div>
+      <CommentBar />
       <ChatBar />
     </div>
   );

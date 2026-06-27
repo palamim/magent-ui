@@ -12,13 +12,15 @@ import {
 import { apiExecute, apiInspectExecution, apiKeepExecution, apiDiscardExecution } from '@/core/api/execution.api';
 import { apiTaskState } from '@/core/api/task.api';
 import { apiDirect, apiApproveDirection, apiDiscardDirection, apiRefineDirection } from '@/core/api/direction.api';
+import { apiAddComment } from '@/core/api/comment.api';
+import { apiProjectStatus, apiSetupProject } from '@/core/api/project-setup.api';
 import type { Plan, Task } from '@/model/plan.model';
 import type { ExecutionResult, InspectTool } from '@/model/execution.model';
 import { DirectionProposal } from '@/model/direction.model';
 import { FileDiff, parseDiff } from '@/lib/parse-diff';
 import { usePersistedString } from '@/hooks/user-persisted-state.hook';
 import { useAutoPush } from '@/hooks/use-auto-push.hook';
-import { apiProjectStatus, apiSetupProject } from '@/core/api/project-setup.api';
+import { Agent } from '@/model/agent.model';
 
 type Mode = 'build' | 'direct';
 
@@ -61,6 +63,9 @@ interface MagentState {
 
   // feature-complete
   featureComplete: string | null;
+
+  // feedback
+  pendingComment: Agent | null;
 }
 
 interface MagentActions {
@@ -92,6 +97,10 @@ interface MagentActions {
   discardExecution: (comment?: string) => Promise<void>;
   refineExecution: (text: string) => Promise<void>;
   inspectExecution: (tool: InspectTool) => Promise<void>;
+
+  // feedback
+  submitComment: (text: string) => Promise<void>;
+  dismissComment: () => void;
 }
 
 type MagentContextValue = MagentState & MagentActions;
@@ -119,6 +128,7 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
   const [needsGitSetup, setNeedsGitSetup] = useState(false);
   const [pendingAction, setPendingAction] = useState<'propose' | 'direct' | null>(null);
   const [hasRealDirection, setHasRealDirection] = useState(false);
+  const [pendingComment, setPendingComment] = useState<Agent | null>(null);
   const { autoPush } = useAutoPush();
 
   // --- SHELL ---
@@ -197,6 +207,7 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
       await apiApproveDirection(dir, direction.rationale, direction.direction, direction.conventions, [], '');
       setHasRealDirection(true);
       exitDirector();
+      setPendingComment(Agent.DIRECTOR);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Approve failed');
     } finally {
@@ -210,6 +221,7 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
     try {
       await apiDiscardDirection(dir, direction.rationale, [], '');
       setDirection(null);
+      setPendingComment(Agent.DIRECTOR);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Discard failed');
     } finally {
@@ -316,6 +328,7 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
       setPlan(null);
       setTask(null);
       resetThread();
+      setPendingComment(Agent.PLANNER);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Finish failed');
     } finally {
@@ -331,6 +344,7 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
       setPlan(null);
       setTask(null);
       resetThread();
+      setPendingComment(Agent.PLANNER);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Abandon failed');
     } finally {
@@ -396,6 +410,7 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
       setFiles([]);
       setExecRefinements([]);
       setSelectedView({ kind: 'plan' }); // land on the overview
+      setPendingComment(Agent.EXECUTOR);
       await backgroundReplan(); // quiet "updating" — prepares next task / detects complete
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Keep failed');
@@ -436,6 +451,7 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
       setFiles([]);
       setExecRefinements([]);
       setSelectedView({ kind: 'plan' }); // back to overview; task.json cleared, can re-run/replan
+      setPendingComment(Agent.EXECUTOR);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Discard failed');
     } finally {
@@ -486,6 +502,21 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
     setSelectedView(plan ? { kind: 'plan' } : { kind: 'empty-plan' });
   };
 
+  const submitComment = async (text: string) => {
+    if (!pendingComment || !text.trim()) {
+      setPendingComment(null);
+      return;
+    }
+    try {
+      await apiAddComment(dir, pendingComment, text);
+    } catch {
+      /* non-fatal */
+    }
+    setPendingComment(null);
+  };
+
+  const dismissComment = () => setPendingComment(null);
+
   const value: MagentContextValue = {
     // shell + state
     dir,
@@ -535,6 +566,11 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
 
     // feature-complete
     featureComplete,
+
+    // feedback
+    pendingComment,
+    submitComment,
+    dismissComment,
   };
 
   return <MagentContext.Provider value={value}>{children}</MagentContext.Provider>;

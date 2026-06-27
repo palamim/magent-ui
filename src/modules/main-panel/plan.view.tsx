@@ -1,10 +1,16 @@
 'use client';
 
+import { useState } from 'react';
+
 import { useMagent } from '@/providers/magent.provider';
+import { ConfirmModal } from '@/components/confirm-modal';
+import { useAutoPush } from '@/hooks/use-auto-push.hook';
 import type { Task } from '@/model/plan.model';
 
 export const PlanView = () => {
-  const { plan, task, executing, replanning, selectView, finishPlan, abandonPlan, acting } = useMagent();
+  const { plan, task, replanning, selectView, finishPlan, abandonPlan, acting } = useMagent();
+  const { autoPush } = useAutoPush();
+  const [confirming, setConfirming] = useState<'finish' | 'abandon' | null>(null);
 
   if (!plan) {
     return (
@@ -23,7 +29,6 @@ export const PlanView = () => {
 
   return (
     <div className="h-full overflow-auto px-8 py-6" style={{ position: 'relative' }}>
-      {/* quiet "updating" overlay during background replan */}
       {replanning && <ReplanningOverlay />}
 
       <div style={{ opacity: replanning ? 0.4 : 1, transition: 'opacity 0.2s' }}>
@@ -57,8 +62,7 @@ export const PlanView = () => {
             <TaskRow
               key={t.id}
               task={t}
-              isNext={task?.id === t.id} // the runnable next task (from task.json)
-              running={executing && task?.id === t.id} // running = the next task, while executing
+              isNext={task?.id === t.id}
               onRun={task?.id === t.id ? () => selectView({ kind: 'task' }) : undefined}
             />
           ))}
@@ -67,7 +71,7 @@ export const PlanView = () => {
         {/* plan-level actions */}
         <div className="mt-8 flex items-center gap-3 border-t pt-5" style={{ borderColor: 'var(--border)' }}>
           <button
-            onClick={() => finishPlan()}
+            onClick={() => setConfirming('finish')}
             disabled={acting || replanning}
             className="px-4 py-2 rounded transition-colors"
             style={{
@@ -90,7 +94,7 @@ export const PlanView = () => {
           )}
 
           <button
-            onClick={() => abandonPlan()}
+            onClick={() => setConfirming('abandon')}
             disabled={acting || replanning}
             className="ml-auto px-4 py-2 rounded transition-colors"
             style={{
@@ -106,6 +110,40 @@ export const PlanView = () => {
           </button>
         </div>
       </div>
+
+      {/* confirms */}
+      {confirming === 'finish' && (
+        <ConfirmModal
+          title={allDone ? 'Merge this feature into main?' : 'Merge now, with tasks remaining?'}
+          body={
+            `This merges the ${plan.type}/${plan.slug} branch into main` +
+            (autoPush ? ' and pushes to remote.' : '.') +
+            (allDone
+              ? ''
+              : ` ${total - done} task${total - done > 1 ? 's' : ''} still pending — only completed work ships.`)
+          }
+          confirmLabel={allDone ? 'Merge' : 'Merge now'}
+          confirmColor="var(--positive)"
+          onConfirm={() => {
+            setConfirming(null);
+            finishPlan();
+          }}
+          onCancel={() => setConfirming(null)}
+        />
+      )}
+      {confirming === 'abandon' && (
+        <ConfirmModal
+          title="Throw away this feature?"
+          body={`This deletes the ${plan.type}/${plan.slug} branch and all its commits. This cannot be undone.`}
+          confirmLabel="Throw away"
+          confirmColor="var(--negative)"
+          onConfirm={() => {
+            setConfirming(null);
+            abandonPlan();
+          }}
+          onCancel={() => setConfirming(null)}
+        />
+      )}
     </div>
   );
 };
@@ -125,35 +163,25 @@ const ReplanningOverlay = () => (
   </div>
 );
 
-const TaskRow = ({
-  task,
-  isNext,
-  running,
-  onRun,
-}: {
-  task: Task;
-  isNext?: boolean;
-  running?: boolean;
-  onRun?: () => void;
-}) => {
+const TaskRow = ({ task, isNext, onRun }: { task: Task; isNext?: boolean; onRun?: () => void }) => {
   const done = task.status === 'done';
-  const icon = done ? '✓' : running ? '→' : '○';
-  const iconColor = done ? 'var(--positive)' : running ? 'var(--running)' : 'var(--foreground-faint)';
+  const icon = done ? '✓' : isNext ? '→' : '○';
+  const iconColor = done ? 'var(--positive)' : isNext ? 'var(--accent)' : 'var(--foreground-faint)';
 
   return (
     <div
       onClick={onRun}
       className="flex items-start gap-3 px-3 py-2.5 rounded transition-colors"
       style={{
-        background: running ? 'var(--running-bg)' : isNext ? 'var(--accent-muted)' : 'transparent',
-        border: running ? '1px solid var(--running)' : isNext ? '1px solid var(--accent)' : '1px solid transparent',
+        background: isNext ? 'var(--accent-muted)' : 'transparent',
+        border: isNext ? '1px solid var(--accent)' : '1px solid transparent',
         cursor: onRun ? 'pointer' : 'default',
       }}
     >
       <span style={{ color: iconColor, fontSize: 14, lineHeight: 1.4, width: 16 }}>{icon}</span>
       <div className="flex-1 min-w-0">
         <div style={{ fontSize: 13, color: done ? 'var(--foreground-muted)' : 'var(--foreground)', fontWeight: 500 }}>
-          {task.slug} {isNext && !running && <span style={{ color: 'var(--accent)', fontSize: 11 }}>· next</span>}
+          {task.slug} {isNext && <span style={{ color: 'var(--accent)', fontSize: 11 }}>· next</span>}
         </div>
         <div className="mt-0.5" style={{ fontSize: 12, color: 'var(--foreground-muted)', lineHeight: 1.45 }}>
           {task.description}
