@@ -8,6 +8,7 @@ import { useAutoPush } from '@/hooks/use-auto-push.hook';
 import type { Task } from '@/model/plan.model';
 
 export const PlanView = () => {
+  const [busy, setBusy] = useState<'finish' | 'abandon' | null>(null);
   const { plan, task, replanning, selectView, finishPlan, abandonPlan, acting } = useMagent();
   const { autoPush } = useAutoPush();
   const [confirming, setConfirming] = useState<'finish' | 'abandon' | null>(null);
@@ -26,6 +27,18 @@ export const PlanView = () => {
   const done = plan.tasks.filter((t) => t.status === 'done').length;
   const total = plan.tasks.length;
   const allDone = done === total;
+
+  // actions
+  const doFinish = async () => {
+    setBusy('finish');
+    await finishPlan();
+    setBusy(null);
+  };
+  const doAbandon = async () => {
+    setBusy('abandon');
+    await abandonPlan();
+    setBusy(null);
+  };
 
   return (
     <div className="h-full overflow-auto px-8 py-6" style={{ position: 'relative' }}>
@@ -84,7 +97,7 @@ export const PlanView = () => {
             }}
             title={allDone ? 'Merge this feature to main' : 'Merge now, even though tasks remain'}
           >
-            {allDone ? 'Finish & merge' : 'Merge now'}
+            {busy === 'finish' ? 'Merging…' : allDone ? 'Finish & merge' : 'Merge now'}
           </button>
 
           {!allDone && (
@@ -107,7 +120,7 @@ export const PlanView = () => {
             }}
             title="Throw away this whole feature branch"
           >
-            Abandon
+            {busy === 'abandon' ? 'Abandoning…' : 'Abandon'}
           </button>
         </div>
       </div>
@@ -127,7 +140,7 @@ export const PlanView = () => {
           confirmColor="var(--positive)"
           onConfirm={() => {
             setConfirming(null);
-            finishPlan();
+            doFinish();
           }}
           onCancel={() => setConfirming(null)}
         />
@@ -140,7 +153,7 @@ export const PlanView = () => {
           confirmColor="var(--negative)"
           onConfirm={() => {
             setConfirming(null);
-            abandonPlan();
+            doAbandon();
           }}
           onCancel={() => setConfirming(null)}
         />
