@@ -12,9 +12,9 @@ import type { ExecutionResult, InspectTool } from '@/model/execution.model';
 import { DirectionProposal } from '@/model/direction.model';
 import { FileDiff, parseDiff } from '@/lib/parse-diff';
 import { usePersistedString } from '@/hooks/user-persisted-state.hook';
-import { useAutoPush } from '@/hooks/use-auto-push.hook';
 import { Agent } from '@/model/agent.model';
 import { apiBranchDiff } from '@/core/api/branch-diff.api';
+import { apiGetConfig, apiSetConfig, MagentConfig } from '@/core/api/config.api';
 
 type Mode = 'build' | 'direct';
 
@@ -29,6 +29,9 @@ export type SelectedView =
   | { kind: 'doc'; name: string };
 
 interface MagentState {
+  // config
+  config: MagentConfig | null;
+
   // shell
   dir: string;
   mode: Mode;
@@ -60,6 +63,9 @@ interface MagentState {
 }
 
 interface MagentActions {
+  // config
+  updateConfig: (patch: Partial<MagentConfig>) => Promise<void>;
+
   // shell
   selectProject: (dir: string) => void;
   selectView: (view: SelectedView) => void;
@@ -100,6 +106,9 @@ type MagentContextValue = MagentState & MagentActions;
 const MagentContext = createContext<MagentContextValue | null>(null);
 
 export const MagentProvider = ({ children }: { children: ReactNode }) => {
+  // --- CONFIG ---
+  const [config, setConfig] = useState<MagentConfig | null>(null);
+
   // --- SHELL ---
   const [dir, setDir] = usePersistedString('magent:project-dir', '');
   const [mode, setMode] = useState<Mode>('build');
@@ -130,8 +139,6 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
 
   // --- FEEDBACK ---
   const [pendingComment, setPendingComment] = useState<Agent | null>(null);
-
-  const { autoPush } = useAutoPush();
 
   // --- SHELL ---
   const selectProject = (path: string) => setDir(path);
@@ -212,6 +219,7 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
     try {
       await apiApproveDirection(dir, direction.rationale, direction.direction, direction.conventions, [], '');
       setHasRealDirection(true);
+      exitDirector();
       setPendingComment(Agent.DIRECTOR);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Approve failed');
@@ -225,7 +233,7 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
     setActing(true);
     try {
       await apiDiscardDirection(dir, direction.rationale, [], '');
-      setDirection(null);
+      exitDirector();
       setPendingComment(Agent.DIRECTOR);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Discard failed');
@@ -319,7 +327,7 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
     setActing(true);
     setError(null);
     try {
-      await apiFinishPlan(dir, autoPush, comment);
+      await apiFinishPlan(dir, comment);
       setPlan(null);
       setTask(null);
       resetThread();
@@ -475,13 +483,15 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
       try {
-        const [{ plan }, { task }, branchState, status] = await Promise.all([
+        const [{ plan }, { task }, branchState, status, config] = await Promise.all([
           apiPlanState(dir),
           apiTaskState(dir),
           apiBranchDiff(dir),
           apiProjectStatus(dir),
+          apiGetConfig(dir),
         ]);
         if (!active) return;
+        setConfig(config);
         setPlan(plan);
         setTask(task);
         setHasRealDirection(status.hasRealDirection);
@@ -526,7 +536,21 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
 
   const dismissComment = () => setPendingComment(null);
 
+  const updateConfig = async (patch: Partial<MagentConfig>) => {
+    if (!dir) return;
+    try {
+      const next = await apiSetConfig(dir, patch);
+      setConfig(next);
+    } catch {
+      /* non-fatal */
+    }
+  };
+
   const value: MagentContextValue = {
+    //config
+    config,
+    updateConfig,
+
     // shell + state
     dir,
     mode,

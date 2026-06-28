@@ -5,9 +5,14 @@ import { VscVscode } from 'react-icons/vsc';
 import { DevBadge } from '@/components/dev-badge';
 import { InspectTool } from '@/model/execution.model';
 import { useMagent } from '@/providers/magent.provider';
+import { FaCodeBranch } from 'react-icons/fa6';
+import { deriveBranchName } from '@/lib/branch';
 
 export const TopBar = () => {
-  const { execution, acting, keepExecution, discardExecution, inspectExecution } = useMagent();
+  const { execution, acting, keepExecution, discardExecution, inspectExecution, config, plan } = useMagent();
+
+  const base = config?.baseBranch;
+  const working = plan ? deriveBranchName(plan.type, plan.slug) : null;
 
   return (
     <header
@@ -16,6 +21,32 @@ export const TopBar = () => {
     >
       <div className="flex items-center gap-2">
         <DevBadge />
+
+        {/* branch indicator: base > working */}
+        {base && (
+          <div className="flex items-center gap-1.5" style={{ fontSize: 12 }}>
+            <FaCodeBranch size={11} style={{ color: 'var(--foreground-faint)' }} />
+            <span
+              title="Base branch — change in Settings"
+              className="rounded px-1.5 py-0.5"
+              style={{ color: 'var(--foreground-muted)', background: 'var(--surface-raised)' }}
+            >
+              {base}
+            </span>
+            {working && (
+              <>
+                <span style={{ color: 'var(--foreground-faint)' }}>›</span>
+                <span
+                  title="Current working branch"
+                  className="px-1.5 py-0.5"
+                  style={{ color: 'var(--accent)', fontWeight: 500 }}
+                >
+                  {working}
+                </span>
+              </>
+            )}
+          </div>
+        )}
       </div>
       {execution ? (
         <div className="flex items-center justify-between gap-2 h-12 px-4 shrink-0">

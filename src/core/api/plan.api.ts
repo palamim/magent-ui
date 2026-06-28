@@ -11,11 +11,8 @@ export const apiRefinePlan = (dir: string, plan: Plan, comment: string): Promise
 export const apiPlanState = (dir: string): Promise<{ plan: Plan | null }> =>
   apiClient.get(`/plan-state?dir=${encodeURIComponent(dir)}`);
 
-export const apiFinishPlan = (
-  dir: string,
-  push: boolean,
-  comment = '',
-): Promise<{ merged: boolean; pushed: boolean }> => apiClient.post('/finish-plan', { dir, push, comment });
+export const apiFinishPlan = (dir: string, comment = ''): Promise<{ merged: boolean; pushed: boolean }> =>
+  apiClient.post('/finish-plan', { dir, comment });
 
 export const apiAbandonPlan = (dir: string, comment = ''): Promise<{ abandoned: boolean }> =>
   apiClient.post('/abandon-plan', { dir, comment });

@@ -4,13 +4,11 @@ import { useState } from 'react';
 
 import { useMagent } from '@/providers/magent.provider';
 import { ConfirmModal } from '@/components/confirm-modal';
-import { useAutoPush } from '@/hooks/use-auto-push.hook';
 import type { Task } from '@/model/plan.model';
 
 export const PlanView = () => {
   const [busy, setBusy] = useState<'finish' | 'abandon' | null>(null);
-  const { plan, task, replanning, selectView, finishPlan, abandonPlan, acting } = useMagent();
-  const { autoPush } = useAutoPush();
+  const { plan, task, replanning, selectView, finishPlan, abandonPlan, acting, config } = useMagent();
   const [confirming, setConfirming] = useState<'finish' | 'abandon' | null>(null);
 
   if (!plan) {
@@ -131,7 +129,7 @@ export const PlanView = () => {
           title={allDone ? 'Merge this feature into main?' : 'Merge now, with tasks remaining?'}
           body={
             `This merges the ${plan.type}/${plan.slug} branch into main` +
-            (autoPush ? ' and pushes to remote.' : '.') +
+            (config?.autoPush ? ' and pushes to remote.' : '.') +
             (allDone
               ? ''
               : ` ${total - done} task${total - done > 1 ? 's' : ''} still pending — only completed work ships.`)

@@ -5,7 +5,6 @@ const subscribe = (callback: () => void) => {
   return () => window.removeEventListener('storage', callback);
 };
 
-const parseBool = (r: string) => r === 'true';
 const identity = (v: string) => v;
 
 export const usePersistedState = <T>(
@@ -33,7 +32,5 @@ export const usePersistedState = <T>(
 
   return [value, set] as const;
 };
-
-export const usePersistedBool = (key: string, initial: boolean) => usePersistedState(key, initial, parseBool, String);
 
 export const usePersistedString = (key: string, initial: string) => usePersistedState(key, initial, identity, identity);
