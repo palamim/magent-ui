@@ -8,7 +8,6 @@ import { DirectionView } from '@/modules/main-panel/direction.view';
 import { DocDiffView } from '@/modules/main-panel/doc-diff.view';
 import { EmptyDirection } from '@/modules/main-panel/empty-direction.view';
 import { ChatBar } from '@/modules/main-panel/chat-bar';
-import { FeatureCompleteView } from '@/modules/main-panel/feature-complete.view';
 import { PlanView } from '@/modules/main-panel/plan.view';
 import { ThinkingView } from '@/modules/main-panel/thinking.view';
 import { CommentBar } from '@/modules/main-panel/comment-bar';
@@ -49,8 +48,6 @@ const CurrentView = ({ view }: { view: SelectedView }) => {
       return <FileDiffView path={view.path} />;
     case 'doc':
       return <DocDiffView name={view.name} />;
-    case 'feature-complete':
-      return <FeatureCompleteView />;
     default:
       return null;
   }

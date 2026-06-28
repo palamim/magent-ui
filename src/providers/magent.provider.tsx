@@ -1,14 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import {
-  apiPlan,
-  apiRefinePlan,
-  apiPlanState,
-  apiFinishPlan,
-  apiAbandonPlan,
-  type PlanResponse,
-} from '@/core/api/plan.api';
+import { apiPlan, apiRefinePlan, apiPlanState, apiFinishPlan, apiAbandonPlan } from '@/core/api/plan.api';
 import { apiExecute, apiInspectExecution, apiKeepExecution, apiDiscardExecution } from '@/core/api/execution.api';
 import { apiTaskState } from '@/core/api/task.api';
 import { apiDirect, apiApproveDirection, apiDiscardDirection, apiRefineDirection } from '@/core/api/direction.api';
@@ -21,6 +14,7 @@ import { FileDiff, parseDiff } from '@/lib/parse-diff';
 import { usePersistedString } from '@/hooks/user-persisted-state.hook';
 import { useAutoPush } from '@/hooks/use-auto-push.hook';
 import { Agent } from '@/model/agent.model';
+import { apiBranchDiff } from '@/core/api/branch-diff.api';
 
 type Mode = 'build' | 'direct';
 
@@ -32,8 +26,7 @@ export type SelectedView =
   | { kind: 'file'; path: string }
   | { kind: 'empty-direction' }
   | { kind: 'direction' }
-  | { kind: 'doc'; name: string }
-  | { kind: 'feature-complete' };
+  | { kind: 'doc'; name: string };
 
 interface MagentState {
   // shell
@@ -60,9 +53,7 @@ interface MagentState {
   executing: boolean;
   executionStatus: 'committed' | 'no-net-changes' | 'gave-up' | null;
   files: FileDiff[];
-
-  // feature-complete
-  featureComplete: string | null;
+  deciding: boolean;
 
   // feedback
   pendingComment: Agent | null;
@@ -97,6 +88,7 @@ interface MagentActions {
   discardExecution: (comment?: string) => Promise<void>;
   refineExecution: (text: string) => Promise<void>;
   inspectExecution: (tool: InspectTool) => Promise<void>;
+  refreshBranchState: () => Promise<void>;
 
   // feedback
   submitComment: (text: string) => Promise<void>;
@@ -108,27 +100,37 @@ type MagentContextValue = MagentState & MagentActions;
 const MagentContext = createContext<MagentContextValue | null>(null);
 
 export const MagentProvider = ({ children }: { children: ReactNode }) => {
+  // --- SHELL ---
   const [dir, setDir] = usePersistedString('magent:project-dir', '');
   const [mode, setMode] = useState<Mode>('build');
-  const [direction, setDirection] = useState<DirectionProposal | null>(null);
-  const [directing, setDirecting] = useState(false);
-  const [plan, setPlan] = useState<Plan | null>(null);
-  const [task, setTask] = useState<Task | null>(null);
-  const [planning, setPlanning] = useState(false);
-  const [replanning, setReplanning] = useState(false); // background advance
-  const [execution, setExecution] = useState<ExecutionResult | null>(null);
   const [selectedView, setSelectedView] = useState<SelectedView>({ kind: 'empty-plan' });
-  const [files, setFiles] = useState<FileDiff[]>([]);
-  const [executing, setExecuting] = useState(false);
-  const [executionStatus, setExecutionStatus] = useState<'committed' | 'no-net-changes' | 'gave-up' | null>(null);
   const [acting, setActing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [execRefinements, setExecRefinements] = useState<string[]>([]);
-  const [featureComplete, setFeatureComplete] = useState<string | null>(null);
   const [needsGitSetup, setNeedsGitSetup] = useState(false);
   const [pendingAction, setPendingAction] = useState<'propose' | 'direct' | null>(null);
   const [hasRealDirection, setHasRealDirection] = useState(false);
+
+  // --- DIRECTOR ---
+  const [direction, setDirection] = useState<DirectionProposal | null>(null);
+  const [directing, setDirecting] = useState(false);
+
+  // --- PLANNER / PLAN ---
+  const [plan, setPlan] = useState<Plan | null>(null);
+  const [task, setTask] = useState<Task | null>(null);
+  const [planning, setPlanning] = useState(false);
+  const [replanning, setReplanning] = useState(false);
+
+  // --- EXECUTION ---
+  const [execution, setExecution] = useState<ExecutionResult | null>(null);
+  const [executing, setExecuting] = useState(false);
+  const [executionStatus, setExecutionStatus] = useState<'committed' | 'no-net-changes' | 'gave-up' | null>(null);
+  const [files, setFiles] = useState<FileDiff[]>([]);
+  const [deciding, setDeciding] = useState(false);
+  const [execRefinements, setExecRefinements] = useState<string[]>([]);
+
+  // --- FEEDBACK ---
   const [pendingComment, setPendingComment] = useState<Agent | null>(null);
+
   const { autoPush } = useAutoPush();
 
   // --- SHELL ---
@@ -136,15 +138,19 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
   const selectView = (view: SelectedView) => setSelectedView(view);
 
   const enterDirector = () => {
-    resetThread();
+    setPendingComment(null);
     setMode('direct');
     setSelectedView({ kind: 'empty-direction' });
   };
 
   const exitDirector = () => {
     setDirection(null);
+    setPendingComment(null);
     setMode('build');
-    setSelectedView({ kind: 'empty-plan' });
+    // return to where the build thread was: the diff if there's an execution, else the plan, else empty
+    if (execution && files.length > 0) setSelectedView({ kind: 'file', path: files[0].path });
+    else if (plan) setSelectedView({ kind: 'plan' });
+    else setSelectedView({ kind: 'empty-plan' });
   };
 
   const needsSetup = async (): Promise<boolean> => {
@@ -206,7 +212,6 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
     try {
       await apiApproveDirection(dir, direction.rationale, direction.direction, direction.conventions, [], '');
       setHasRealDirection(true);
-      exitDirector();
       setPendingComment(Agent.DIRECTOR);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Approve failed');
@@ -247,26 +252,15 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
 
   // --- PLANNER / PLAN ---
 
-  const applyPlanResult = (result: PlanResponse) => {
-    if (result.kind === 'feature-complete') {
-      setFeatureComplete(result.goal);
-      setSelectedView({ kind: 'feature-complete' });
-    } else {
-      // kind === 'task' — content is in the files; land on the overview
-      setSelectedView({ kind: 'plan' });
-    }
-  };
-
   const runProposePlan = async () => {
     setPlanning(true);
     setError(null);
     setExecution(null);
     setExecutionStatus(null);
-    setFeatureComplete(null);
     try {
-      applyPlanResult(await apiPlan(dir));
-      await refreshPlanState(); // re-read plan.json
-      await refreshTask(); // re-read task.json
+      await apiPlan(dir);
+      await refreshPlanState();
+      await refreshTask();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Proposal failed');
     } finally {
@@ -281,18 +275,19 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
     await runProposePlan();
+    setSelectedView({ kind: 'plan' });
   };
 
   const refinePlan = async (text: string) => {
     if (!plan) return;
     setPlanning(true);
     setError(null);
-    setFeatureComplete(null);
     try {
       await apiRefinePlan(dir, plan, text);
-      applyPlanResult(await apiPlan(dir));
+      await apiPlan(dir);
       await refreshPlanState();
       await refreshTask();
+      setSelectedView({ kind: 'plan' });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Refine failed');
     } finally {
@@ -329,6 +324,7 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
       setTask(null);
       resetThread();
       setPendingComment(Agent.PLANNER);
+      setSelectedView({ kind: 'empty-plan' });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Finish failed');
     } finally {
@@ -345,6 +341,7 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
       setTask(null);
       resetThread();
       setPendingComment(Agent.PLANNER);
+      setSelectedView({ kind: 'empty-plan' });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Abandon failed');
     } finally {
@@ -358,10 +355,11 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
     setExecuting(true);
     setError(null);
     try {
-      const result = await apiExecute(dir, refinements); // brain reads task.json
+      const result = await apiExecute(dir, refinements);
       if (result.status === 'committed') {
         setExecutionStatus('committed');
         setExecution(result);
+        setDeciding(true); // ← committed, awaiting decision
         const parsed = parseDiff(result.diff);
         setFiles(parsed);
         if (parsed.length > 0) setSelectedView({ kind: 'file', path: parsed[0].path });
@@ -397,21 +395,20 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // "Keep" — commit stays on the branch; log approval; then background-replan to prepare the next task
   const keepExecution = async (comment = '') => {
     if (!execution) return;
     setActing(true);
     setError(null);
     try {
       await apiKeepExecution(dir, execRefinements, comment);
-      // execution thread done — clear it, go to the overview, then replan in the background
       setExecution(null);
+      setDeciding(false);
       setExecutionStatus(null);
-      setFiles([]);
       setExecRefinements([]);
-      setSelectedView({ kind: 'plan' }); // land on the overview
+      setSelectedView({ kind: 'plan' });
       setPendingComment(Agent.EXECUTOR);
-      await backgroundReplan(); // quiet "updating" — prepares next task / detects complete
+      await backgroundReplan();
+      await refreshBranchState();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Keep failed');
     } finally {
@@ -419,27 +416,19 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // the quiet, non-blocking advance after keep: re-ground plan + project next task (or feature-complete)
   const backgroundReplan = async () => {
     setReplanning(true);
     try {
-      const result = await apiPlan(dir); // advance mode (plan exists)
+      await apiPlan(dir);
       await refreshPlanState();
       await refreshTask();
-      if (result.kind === 'feature-complete') {
-        setFeatureComplete(result.goal);
-        setSelectedView({ kind: 'feature-complete' });
-      }
-      // else: stay on the overview; task.json now holds the next task
     } catch (err) {
-      // replan failed — task.json is cleared (we archived on keep), so the overview shows "no task ready"
       setError(err instanceof Error ? err.message : 'Could not prepare the next task');
     } finally {
       setReplanning(false);
     }
   };
 
-  // "Discard" — undo this task's commit, stay on the branch
   const discardExecution = async (comment = '') => {
     if (!execution) return;
     setActing(true);
@@ -447,15 +436,28 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
     try {
       await apiDiscardExecution(dir, execution.branch, execRefinements, comment);
       setExecution(null);
+      setDeciding(false);
       setExecutionStatus(null);
-      setFiles([]);
       setExecRefinements([]);
-      setSelectedView({ kind: 'plan' }); // back to overview; task.json cleared, can re-run/replan
+      setSelectedView({ kind: 'plan' });
       setPendingComment(Agent.EXECUTOR);
+      await refreshBranchState();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Discard failed');
     } finally {
       setActing(false);
+    }
+  };
+
+  const refreshBranchState = async () => {
+    if (!dir) return;
+    try {
+      const { diff, deciding, branch } = await apiBranchDiff(dir);
+      setFiles(diff ? parseDiff(diff) : []);
+      setDeciding(deciding);
+      setExecution(deciding ? { branch, status: 'committed', diff } : null);
+    } catch {
+      /* non-fatal */
     }
   };
 
@@ -473,15 +475,21 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
       try {
-        const [{ plan }, { task }, status] = await Promise.all([
+        const [{ plan }, { task }, branchState, status] = await Promise.all([
           apiPlanState(dir),
           apiTaskState(dir),
+          apiBranchDiff(dir),
           apiProjectStatus(dir),
         ]);
         if (!active) return;
         setPlan(plan);
         setTask(task);
         setHasRealDirection(status.hasRealDirection);
+        setFiles(branchState.diff ? parseDiff(branchState.diff) : []);
+        setDeciding(branchState.deciding);
+        setExecution(
+          branchState.deciding ? { branch: branchState.branch, status: 'committed', diff: branchState.diff } : null,
+        );
         if (plan) setSelectedView({ kind: 'plan' });
       } catch {
         /* non-fatal */
@@ -497,6 +505,7 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
   const resetThread = () => {
     setExecution(null);
     setExecutionStatus(null);
+    setDeciding(false);
     setFiles([]);
     setExecRefinements([]);
     setSelectedView(plan ? { kind: 'plan' } : { kind: 'empty-plan' });
@@ -563,9 +572,8 @@ export const MagentProvider = ({ children }: { children: ReactNode }) => {
     discardExecution,
     refineExecution,
     inspectExecution,
-
-    // feature-complete
-    featureComplete,
+    refreshBranchState,
+    deciding,
 
     // feedback
     pendingComment,

@@ -4,7 +4,7 @@ import { ThinkingDots } from '@/components/thinking-dots';
 import { useMagent } from '@/providers/magent.provider';
 
 export const TaskView = () => {
-  const { task, execute, execution, executing, error, executionStatus, replanning } = useMagent();
+  const { task, execute, execution, executing, error, executionStatus, replanning, deciding } = useMagent();
 
   if (!task) return null;
 
@@ -34,7 +34,7 @@ export const TaskView = () => {
       )}
 
       {/* Run lives with the task — execute this proposal */}
-      {!execution && !executionStatus && !replanning && (
+      {!deciding && !execution && !executionStatus && !replanning && (
         <>
           <button
             onClick={execute}

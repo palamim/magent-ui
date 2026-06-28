@@ -30,7 +30,7 @@ export const CommentBar = () => {
           if (e.key === 'Enter') submit();
           if (e.key === 'Escape') skip();
         }}
-        placeholder="Any feedback for next time? Magent learns from it (optional)"
+        placeholder={`Any feedback for the ${pendingComment} next time? Magent learns from it (optional)`}
         autoFocus
         className="flex-1 bg-transparent outline-none"
         style={{ color: 'var(--foreground)', fontSize: 13 }}

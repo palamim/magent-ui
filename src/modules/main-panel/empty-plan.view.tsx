@@ -11,9 +11,9 @@ export const EmptyPlan = () => {
       <div style={{ maxWidth: 460 }}>
         <p style={{ color: 'var(--foreground)', fontSize: 16, fontWeight: 600 }}>Let&apos;s build something</p>
         <p className="mt-3" style={{ color: 'var(--foreground-muted)', fontSize: 13, lineHeight: 1.7 }}>
-          Magent works in three steps. The <strong style={{ color: 'var(--foreground)' }}>Planner</strong> proposes a
-          task, the <strong style={{ color: 'var(--foreground)' }}>Executor</strong> builds it on a branch, and you
-          review the diff and approve. Hit propose to see your first plan.
+          The <strong style={{ color: 'var(--foreground)' }}>Planner</strong> (agent) proposes a plan with tasks. <br />{' '}
+          The <strong style={{ color: 'var(--foreground)' }}>Executor</strong> (agent) executes each task on a new
+          branch. <br /> <strong style={{ color: 'var(--foreground)' }}>You</strong> review and approve every step.
         </p>
       </div>
 

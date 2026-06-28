@@ -89,7 +89,8 @@ export const PlanView = () => {
 
           {!allDone && (
             <span style={{ fontSize: 11, color: 'var(--foreground-faint)' }}>
-              {done}/{total} done — merging now ships what&apos;s complete.
+              {done}/{total}
+              {` `} done — merging now ships what&apos;s complete.
             </span>
           )}
 
