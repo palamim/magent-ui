@@ -25,7 +25,7 @@ export const TopBar = () => {
         {/* branch indicator: base > working */}
         {base && (
           <div className="flex items-center gap-1.5" style={{ fontSize: 12 }}>
-            <FaCodeBranch size={11} style={{ color: 'var(--foreground-faint)' }} />
+            <FaCodeBranch size={11} style={{ color: 'var(--magent)' }} />
             <span
               title="Base branch — change in Settings"
               className="rounded px-1.5 py-0.5"

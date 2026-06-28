@@ -4,14 +4,14 @@ export const DevBadge = () => {
     <span
       className="px-1 py-0.5 rounded shrink-0"
       style={{
-        background: 'var(--running)',
-        color: 'var(--background)',
+        background: 'var(--magent-muted)',
+        color: 'var(--magent)',
         fontSize: 8,
         fontWeight: 700,
         letterSpacing: '0.05em',
       }}
     >
-      LOCAL
+      DEVELOPMENT MODE
     </span>
   );
 };

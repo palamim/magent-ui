@@ -178,22 +178,22 @@ const ReplanningOverlay = () => (
 const TaskRow = ({ task, isNext, onRun }: { task: Task; isNext?: boolean; onRun?: () => void }) => {
   const done = task.status === 'done';
   const icon = done ? '✓' : isNext ? '→' : '○';
-  const iconColor = done ? 'var(--positive)' : isNext ? 'var(--accent)' : 'var(--foreground-faint)';
+  const iconColor = done ? 'var(--positive)' : isNext ? 'var(--magent-bright)' : 'var(--foreground-faint)';
 
   return (
     <div
       onClick={onRun}
       className="flex items-start gap-3 px-3 py-2.5 rounded transition-colors"
       style={{
-        background: isNext ? 'var(--accent-muted)' : 'transparent',
-        border: isNext ? '1px solid var(--accent)' : '1px solid transparent',
+        background: isNext ? 'var(--magent-muted)' : 'transparent',
+        border: isNext ? '1px solid var(--magent-border)' : '1px solid transparent',
         cursor: onRun ? 'pointer' : 'default',
       }}
     >
       <span style={{ color: iconColor, fontSize: 14, lineHeight: 1.4, width: 16 }}>{icon}</span>
       <div className="flex-1 min-w-0">
         <div style={{ fontSize: 13, color: done ? 'var(--foreground-muted)' : 'var(--foreground)', fontWeight: 500 }}>
-          {task.slug} {isNext && <span style={{ color: 'var(--accent)', fontSize: 11 }}>· next</span>}
+          {task.slug} {isNext && <span style={{ color: 'var(--magent-bright)', fontSize: 11 }}>· next</span>}
         </div>
         <div className="mt-0.5" style={{ fontSize: 12, color: 'var(--foreground-muted)', lineHeight: 1.45 }}>
           {task.description}

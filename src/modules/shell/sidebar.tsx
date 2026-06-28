@@ -145,20 +145,30 @@ export const Sidebar = () => {
               </p>
             ) : (
               <>
-                <SidebarSection label="Current Feature" />
-                <div className="w-full text-left px-4 pb-2">
+                {/* the feature block — the goal IS the overview link */}
+                <button
+                  onClick={() => selectView({ kind: 'plan' })}
+                  className="w-full text-left px-4 py-3 transition-colors"
+                  style={{
+                    background: selectedView.kind === 'plan' ? 'var(--accent-muted)' : 'transparent',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <div
+                    style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.05em', color: 'var(--foreground-faint)' }}
+                  >
+                    CURRENT FEATURE
+                  </div>
                   <div
                     className="mt-1 line-clamp-2"
-                    style={{ fontSize: 12, color: 'var(--foreground-muted)', lineHeight: 1.4 }}
+                    style={{ fontSize: 13, color: 'var(--foreground)', lineHeight: 1.35, fontWeight: 500 }}
                   >
                     {plan.goal}
                   </div>
-                </div>
-                <SidebarItem
-                  label="→ Overview"
-                  active={selectedView.kind === 'plan'}
-                  onClick={() => selectView({ kind: 'plan' })}
-                />
+                  <div className="mt-1" style={{ fontSize: 11, color: 'var(--foreground-muted)' }}>
+                    {plan.tasks.filter((t) => t.status === 'done').length}/{plan.tasks.length} tasks
+                  </div>
+                </button>
                 <SidebarSection label="Tasks" />
                 {plan.tasks.map((t) => {
                   const isNext = task?.id === t.id;
@@ -217,8 +227,8 @@ export const Sidebar = () => {
 
 const SidebarSection = ({ label }: { label: string }) => (
   <p
-    className="px-4 pt-3 pb-1 uppercase tracking-wide"
-    style={{ color: 'var(--foreground-faint)', fontSize: 11, fontWeight: 600 }}
+    className="w-full text-left px-4 pt-3 pb-1 uppercase tracking-wide transition-colors"
+    style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.05em', color: 'var(--foreground-faint)' }}
   >
     {label}
   </p>
@@ -239,7 +249,7 @@ const SidebarItem = ({
     return (
       <button
         onClick={onClick}
-        className="w-full text-left px-4 py-1.5 truncate transition-colors"
+        className="w-full text-left px-4 py-1.5 truncate transition-colors hover:bg-[var(--surface-raised)]"
         style={{
           background: 'transparent',
           color: 'var(--foreground-muted)',
@@ -282,7 +292,7 @@ const SidebarTaskItem = ({
   onClick?: () => void;
 }) => {
   const icon = done ? '✓' : isNext ? '→' : '○';
-  const iconColor = done ? 'var(--positive)' : isNext ? 'var(--accent)' : 'var(--foreground-faint)';
+  const iconColor = done ? 'var(--positive)' : isNext ? 'var(--magent-bright)' : 'var(--foreground-faint)';
   const clickable = !!onClick;
 
   return (
@@ -295,12 +305,12 @@ const SidebarTaskItem = ({
         color: done ? 'var(--foreground-muted)' : 'var(--foreground)',
         fontSize: 13,
         cursor: clickable ? 'pointer' : 'default',
-        opacity: clickable || done ? 1 : 0.55, // pending-but-not-next is dimmed
+        opacity: clickable || done ? 1 : 0.55,
       }}
     >
       <span style={{ color: iconColor, width: 14, fontSize: 13 }}>{icon}</span>
       <span className="truncate">{label}</span>
-      {isNext && <span style={{ color: 'var(--accent)', fontSize: 10, marginLeft: 'auto' }}>next</span>}
+      {isNext && <span style={{ color: 'var(--magent-bright)', fontSize: 10, marginLeft: 'auto' }}>next</span>}
     </button>
   );
 };

@@ -1,6 +1,12 @@
 @import 'tailwindcss';
 
 :root {
+  /* ── brand accent: magenta (the Magent color — identity + interactivity) ── */
+  --magent: #c026a8; /* the core — deep magenta, not hot pink; brutalist, saturated but dark */
+  --magent-bright: #e84bc9; /* brighter, for small marks on dark (icons, the · next dot) */
+  --magent-muted: #2a0f26; /* the tint — selected bg, subtle highlight (replaces accent-muted's gray) */
+  --magent-border: #4a1a42;
+
   /* ── surfaces (cool near-black, layered) ── */
   --background: #0c0c0e; /* app base — not pure black, slight cool */
   --surface: #141417; /* sidebar, panels — one step up from base */
