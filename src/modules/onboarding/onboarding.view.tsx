@@ -29,8 +29,9 @@ export const OnboardingView = ({ status, onRetry }: OnboardingScreenProps) => {
             className="mt-2"
             style={{ fontSize: 14, color: 'var(--foreground-muted)', lineHeight: 1.6, maxWidth: 480, margin: '0 auto' }}
           >
-            Magent is an agentic coding tool with a direction layer. A Director sets the frontier, a Planner turns it
-            into tasks, an Executor builds them — and you approve every step.
+            Magent is the direction layer for AI coding. It proposes the direction your project should move toward and
+            orchestrates agents that build it, while you supervise, approving, sharpening, and giving feedback the
+            agents learn from.
           </p>
         </div>
 
